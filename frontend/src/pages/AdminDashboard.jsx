@@ -1,5 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Car,
+  LogOut,
+  ClipboardList,
+  Clock,
+  CheckCircle2,
+  Loader,
+  AlertCircle,
+  BarChart3,
+  Filter,
+  Inbox,
+  ShieldCheck,
+} from "lucide-react";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -77,21 +90,15 @@ function AdminDashboard() {
     navigate("/");
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "confirmed":
-        return "bg-blue-100 text-blue-800";
-      case "in-progress":
-        return "bg-purple-100 text-purple-800";
-      case "completed":
-        return "bg-green-100 text-green-800";
-      case "cancelled":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+  const getStatusStyle = (status) => {
+    const map = {
+      pending: "bg-amber-50 text-amber-700 border border-amber-200",
+      confirmed: "bg-blue-50 text-blue-700 border border-blue-200",
+      "in-progress": "bg-violet-50 text-violet-700 border border-violet-200",
+      completed: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+      cancelled: "bg-red-50 text-red-700 border border-red-200",
+    };
+    return map[status] || "bg-gray-50 text-gray-700 border border-gray-200";
   };
 
   const filteredBookings =
@@ -99,219 +106,279 @@ function AdminDashboard() {
       ? bookings
       : bookings.filter((b) => b.status === filterStatus);
 
-  const stats = {
-    total: bookings.length,
-    pending: bookings.filter((b) => b.status === "pending").length,
-    confirmed: bookings.filter((b) => b.status === "confirmed").length,
-    inProgress: bookings.filter((b) => b.status === "in-progress").length,
-    completed: bookings.filter((b) => b.status === "completed").length,
-  };
+  const stats = [
+    {
+      label: "Total",
+      value: bookings.length,
+      Icon: BarChart3,
+      accent: "text-gray-900",
+      bg: "bg-white",
+      border: "border-gray-100",
+    },
+    {
+      label: "Pending",
+      value: bookings.filter((b) => b.status === "pending").length,
+      Icon: Clock,
+      accent: "text-amber-600",
+      bg: "bg-amber-50/50",
+      border: "border-amber-100",
+    },
+    {
+      label: "Confirmed",
+      value: bookings.filter((b) => b.status === "confirmed").length,
+      Icon: CheckCircle2,
+      accent: "text-blue-600",
+      bg: "bg-blue-50/50",
+      border: "border-blue-100",
+    },
+    {
+      label: "In Progress",
+      value: bookings.filter((b) => b.status === "in-progress").length,
+      Icon: Loader,
+      accent: "text-violet-600",
+      bg: "bg-violet-50/50",
+      border: "border-violet-100",
+    },
+    {
+      label: "Completed",
+      value: bookings.filter((b) => b.status === "completed").length,
+      Icon: ShieldCheck,
+      accent: "text-emerald-600",
+      bg: "bg-emerald-50/50",
+      border: "border-emerald-100",
+    },
+  ];
+
+  const filterOptions = [
+    { value: "all", label: "All" },
+    { value: "pending", label: "Pending" },
+    { value: "confirmed", label: "Confirmed" },
+    { value: "in-progress", label: "In Progress" },
+    { value: "completed", label: "Completed" },
+    { value: "cancelled", label: "Cancelled" },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <header className="bg-white shadow-md">
+      <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
         <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-3 hover:opacity-80 transition"
+            className="flex items-center gap-3 group"
           >
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">A</span>
+            <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition">
+              <Car className="w-6 h-6 text-white" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">AutoServe</h1>
-              <p className="text-xs text-blue-600">Admin Panel</p>
+            <div className="hidden sm:block">
+              <h1 className="text-xl font-bold text-gray-800 leading-tight">
+                AutoServe
+              </h1>
+              <p className="text-[10px] text-blue-600 font-semibold tracking-wider uppercase">
+                Admin Panel
+              </p>
             </div>
           </button>
 
           <button
             onClick={handleLogout}
-            className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition"
+            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 bg-red-50 border border-red-100 rounded-xl hover:bg-red-100 transition-all duration-200"
           >
-            Logout
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </nav>
       </header>
 
-      {/* Main Content */}
-      <div className="container mx-auto max-w-7xl px-4 py-12">
-        <div className="mb-12">
-          <h2 className="text-4xl font-bold text-gray-800 mb-2">
+      <main className="flex-1 container mx-auto max-w-7xl px-4 py-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-1">
             Booking Management
           </h2>
-          <p className="text-gray-600">
-            Manage all vehicle service bookings and update their status
+          <p className="text-gray-500 text-sm">
+            Monitor and manage all vehicle service bookings
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid md:grid-cols-5 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-600 text-sm font-semibold mb-2">Total</p>
-            <p className="text-3xl font-bold text-gray-800">{stats.total}</p>
-          </div>
-
-          <div className="bg-yellow-50 rounded-lg shadow p-6">
-            <p className="text-yellow-600 text-sm font-semibold mb-2">
-              Pending
-            </p>
-            <p className="text-3xl font-bold text-yellow-800">
-              {stats.pending}
-            </p>
-          </div>
-
-          <div className="bg-blue-50 rounded-lg shadow p-6">
-            <p className="text-blue-600 text-sm font-semibold mb-2">
-              Confirmed
-            </p>
-            <p className="text-3xl font-bold text-blue-800">
-              {stats.confirmed}
-            </p>
-          </div>
-
-          <div className="bg-purple-50 rounded-lg shadow p-6">
-            <p className="text-purple-600 text-sm font-semibold mb-2">
-              In Progress
-            </p>
-            <p className="text-3xl font-bold text-purple-800">
-              {stats.inProgress}
-            </p>
-          </div>
-
-          <div className="bg-green-50 rounded-lg shadow p-6">
-            <p className="text-green-600 text-sm font-semibold mb-2">
-              Completed
-            </p>
-            <p className="text-3xl font-bold text-green-800">
-              {stats.completed}
-            </p>
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+          {stats.map(({ label, value, Icon, accent, bg, border }) => (
+            <div
+              key={label}
+              className={`${bg} rounded-xl border ${border} p-5 transition-all hover:shadow-md`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div
+                  className={`w-9 h-9 rounded-lg flex items-center justify-center ${accent} bg-white/80`}
+                >
+                  <Icon className="w-4.5 h-4.5" />
+                </div>
+              </div>
+              <p className={`text-3xl font-bold ${accent}`}>{value}</p>
+              <p className="text-xs font-medium text-gray-400 mt-1 uppercase tracking-wider">
+                {label}
+              </p>
+            </div>
+          ))}
         </div>
 
-        {/* Filter */}
-        <div className="mb-8 flex gap-2 flex-wrap">
-          {["all", "pending", "confirmed", "in-progress", "completed"].map(
-            (status) => (
-              <button
-                key={status}
-                onClick={() => setFilterStatus(status)}
-                className={`px-4 py-2 rounded-lg font-semibold transition ${
-                  filterStatus === status
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-gray-600 border border-gray-200 hover:border-blue-600"
-                }`}
-              >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </button>
-            ),
-          )}
+        {/* Filters */}
+        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+          <Filter className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          {filterOptions.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setFilterStatus(value)}
+              className={`px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 whitespace-nowrap ${
+                filterStatus === value
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
+                  : "bg-white text-gray-500 border border-gray-200 hover:border-blue-300 hover:text-blue-600"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         {/* Bookings Table */}
         {loading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600">Loading bookings...</p>
+          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+            <svg
+              className="animate-spin w-8 h-8 text-blue-600 mx-auto mb-3"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+            <p className="text-gray-500 text-sm">Loading bookings...</p>
           </div>
         ) : filteredBookings.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-600">No bookings found</p>
+          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+            <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Inbox className="w-8 h-8 text-gray-300" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+              No bookings found
+            </h3>
+            <p className="text-gray-500 text-sm">
+              No bookings match the current filter
+            </p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="px-6 py-4 text-left font-semibold text-gray-800">
-                    Customer
-                  </th>
-                  <th className="px-6 py-4 text-left font-semibold text-gray-800">
-                    Service
-                  </th>
-                  <th className="px-6 py-4 text-left font-semibold text-gray-800">
-                    Vehicle
-                  </th>
-                  <th className="px-6 py-4 text-left font-semibold text-gray-800">
-                    Date
-                  </th>
-                  <th className="px-6 py-4 text-left font-semibold text-gray-800">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-left font-semibold text-gray-800">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredBookings.map((booking) => (
-                  <tr key={booking._id} className="border-b hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="font-semibold text-gray-800">
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Customer
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Service
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Vehicle
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Schedule
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filteredBookings.map((booking) => (
+                    <tr
+                      key={booking._id}
+                      className="hover:bg-gray-50/50 transition-colors"
+                    >
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-semibold text-gray-900">
                           {booking.customerId?.name || "N/A"}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs text-gray-400 mt-0.5">
                           {booking.customerId?.email || "N/A"}
                         </p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-gray-800">
-                        {booking.serviceId?.name || "N/A"}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        ${booking.totalPrice}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-gray-800">
-                        {booking.vehicleInfo.year} {booking.vehicleInfo.make}{" "}
-                        {booking.vehicleInfo.model}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {booking.vehicleInfo.licensePlate}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-gray-800">
-                        {new Date(booking.bookingDate).toLocaleDateString()}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {booking.timeSlot}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${getStatusColor(
-                          booking.status,
-                        )}`}
-                      >
-                        {booking.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <select
-                        value={booking.status}
-                        onChange={(e) =>
-                          handleStatusUpdate(booking._id, e.target.value)
-                        }
-                        disabled={updatingId === booking._id}
-                        className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500 disabled:bg-gray-100"
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-medium text-gray-800">
+                          {booking.serviceId?.name || "N/A"}
+                        </p>
+                        <p className="text-xs text-blue-600 font-bold mt-0.5">
+                          ${booking.totalPrice}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-gray-800">
+                          {booking.vehicleInfo.year} {booking.vehicleInfo.make}{" "}
+                          {booking.vehicleInfo.model}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5 font-mono">
+                          {booking.vehicleInfo.licensePlate}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-gray-800">
+                          {new Date(booking.bookingDate).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                            },
+                          )}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {booking.timeSlot}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-block px-3 py-1.5 rounded-lg text-xs font-semibold capitalize ${getStatusStyle(booking.status)}`}
+                        >
+                          {booking.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <select
+                          value={booking.status}
+                          onChange={(e) =>
+                            handleStatusUpdate(booking._id, e.target.value)
+                          }
+                          disabled={updatingId === booking._id}
+                          className="px-3 py-2 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 hover:border-gray-300 transition-all duration-200 disabled:bg-gray-50 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="confirmed">Confirmed</option>
+                          <option value="in-progress">In Progress</option>
+                          <option value="completed">Completed</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

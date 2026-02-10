@@ -1,5 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Car,
+  Mail,
+  Lock,
+  Phone,
+  User,
+  ArrowRight,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 
 function SignUp() {
   const navigate = useNavigate();
@@ -104,186 +114,227 @@ function SignUp() {
     }
   };
 
+  const InputField = ({
+    icon: Icon,
+    label,
+    name,
+    type = "text",
+    placeholder,
+    error,
+  }) => (
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        {label}
+      </label>
+      <div className="relative">
+        <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <input
+          type={type}
+          name={name}
+          value={formData[name]}
+          onChange={handleChange}
+          placeholder={placeholder}
+          className={`w-full pl-12 pr-4 py-3.5 rounded-xl border-2 focus:outline-none transition-all duration-200 text-sm ${
+            error
+              ? "border-red-400 focus:border-red-500 bg-red-50/50"
+              : "border-gray-200 focus:border-blue-500 hover:border-gray-300"
+          }`}
+        />
+      </div>
+      {error && (
+        <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+          <AlertCircle className="w-3 h-3" />
+          {error}
+        </p>
+      )}
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-2xl">A</span>
-          </div>
+    <div className="min-h-screen flex">
+      {/* Left Panel - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900" />
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-32 right-10 w-72 h-72 bg-blue-500 rounded-full blur-3xl" />
+          <div className="absolute bottom-10 left-20 w-96 h-96 bg-indigo-500 rounded-full blur-3xl" />
         </div>
-
-        <h1 className="text-3xl font-bold text-gray-800 text-center mb-2">
-          Create Account
-        </h1>
-        <p className="text-gray-600 text-center mb-8">
-          Join AutoServe and book your service easily
-        </p>
-
-        {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
-            Registration successful! Redirecting to dashboard...
-          </div>
-        )}
-
-        {errors.submit && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-            {errors.submit}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Name Field */}
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">
-              Full Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Enter your full name"
-              className={`w-full px-4 py-3 rounded-lg border-2 focus:outline-none transition ${
-                errors.name
-                  ? "border-red-500 focus:border-red-600"
-                  : "border-gray-200 focus:border-blue-500"
-              }`}
-            />
-            {errors.name && (
-              <p className="text-red-500 text-sm mt-1">{errors.name}</p>
-            )}
-          </div>
-
-          {/* Email Field */}
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              className={`w-full px-4 py-3 rounded-lg border-2 focus:outline-none transition ${
-                errors.email
-                  ? "border-red-500 focus:border-red-600"
-                  : "border-gray-200 focus:border-blue-500"
-              }`}
-            />
-            {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-            )}
-          </div>
-
-          {/* Phone Field */}
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="Enter your phone number"
-              className={`w-full px-4 py-3 rounded-lg border-2 focus:outline-none transition ${
-                errors.phone
-                  ? "border-red-500 focus:border-red-600"
-                  : "border-gray-200 focus:border-blue-500"
-              }`}
-            />
-            {errors.phone && (
-              <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-            )}
-          </div>
-
-          {/* Password Field */}
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              className={`w-full px-4 py-3 rounded-lg border-2 focus:outline-none transition ${
-                errors.password
-                  ? "border-red-500 focus:border-red-600"
-                  : "border-gray-200 focus:border-blue-500"
-              }`}
-            />
-            {errors.password && (
-              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-            )}
-          </div>
-
-          {/* Confirm Password Field */}
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-              className={`w-full px-4 py-3 rounded-lg border-2 focus:outline-none transition ${
-                errors.confirmPassword
-                  ? "border-red-500 focus:border-red-600"
-                  : "border-gray-200 focus:border-blue-500"
-              }`}
-            />
-            {errors.confirmPassword && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.confirmPassword}
+        <div className="relative z-10 flex flex-col justify-center px-16">
+          <a href="/" className="flex items-center gap-3 mb-12">
+            <div className="w-12 h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl flex items-center justify-center">
+              <Car className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white">AutoServe</h1>
+              <p className="text-[10px] text-blue-300 font-semibold tracking-wider uppercase">
+                Vehicle Service Pro
               </p>
-            )}
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition disabled:bg-blue-400 disabled:cursor-not-allowed mt-6"
-          >
-            {loading ? "Creating Account..." : "Sign Up"}
-          </button>
-        </form>
-
-        {/* Login Link */}
-        <p className="text-center text-gray-600 mt-6">
-          Already have an account?
-          <button
-            onClick={() => navigate("/signin")}
-            className="text-blue-600 font-semibold hover:underline ml-1"
-          >
-            Sign In
-          </button>
-        </p>
-
-        {/* Divider */}
-        <div className="relative my-8">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">or</span>
+            </div>
+          </a>
+          <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
+            Join thousands of
+            <br />
+            <span className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
+              smart vehicle owners
+            </span>
+          </h2>
+          <p className="text-gray-400 text-lg leading-relaxed max-w-md mb-10">
+            Create your free account and start booking vehicle services in
+            minutes. Quick, easy, and hassle-free.
+          </p>
+          <div className="space-y-4">
+            {[
+              "Book services in under 2 minutes",
+              "Track real-time service updates",
+              "Access certified technicians",
+            ].map((item) => (
+              <div key={item} className="flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                <span className="text-gray-300 text-sm">{item}</span>
+              </div>
+            ))}
           </div>
         </div>
+      </div>
 
-        {/* Home Link */}
-        <button
-          onClick={() => navigate("/")}
-          className="w-full py-3 text-blue-600 font-semibold border-2 border-blue-600 rounded-lg hover:bg-blue-50 transition"
-        >
-          Back to Home
-        </button>
+      {/* Right Panel - Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+        <div className="w-full max-w-md">
+          {/* Mobile Logo */}
+          <div className="flex justify-center mb-8 lg:hidden">
+            <a href="/" className="flex items-center gap-3">
+              <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md">
+                <Car className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-xl font-bold text-gray-800">AutoServe</span>
+            </a>
+          </div>
+
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Create Account
+          </h1>
+          <p className="text-gray-500 mb-8">
+            Fill in your details to get started
+          </p>
+
+          {success && (
+            <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl mb-6">
+              <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm">
+                Registration successful! Redirecting to dashboard...
+              </span>
+            </div>
+          )}
+
+          {errors.submit && (
+            <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm">{errors.submit}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <InputField
+              icon={User}
+              label="Full Name"
+              name="name"
+              placeholder="John Doe"
+              error={errors.name}
+            />
+            <InputField
+              icon={Mail}
+              label="Email Address"
+              name="email"
+              type="email"
+              placeholder="you@example.com"
+              error={errors.email}
+            />
+            <InputField
+              icon={Phone}
+              label="Phone Number"
+              name="phone"
+              type="tel"
+              placeholder="1234567890"
+              error={errors.phone}
+            />
+            <InputField
+              icon={Lock}
+              label="Password"
+              name="password"
+              type="password"
+              placeholder="Min. 6 characters"
+              error={errors.password}
+            />
+            <InputField
+              icon={Lock}
+              label="Confirm Password"
+              name="confirmPassword"
+              type="password"
+              placeholder="Re-enter password"
+              error={errors.confirmPassword}
+            />
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="group w-full py-3.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 disabled:bg-gray-300 disabled:shadow-none disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <svg
+                    className="animate-spin w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                  Creating Account...
+                </span>
+              ) : (
+                <>
+                  Create Account
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-3 bg-white text-gray-400 uppercase tracking-wider">
+                or
+              </span>
+            </div>
+          </div>
+
+          {/* Sign In Link */}
+          <p className="text-center text-gray-500 text-sm">
+            Already have an account?{" "}
+            <button
+              onClick={() => navigate("/signin")}
+              className="text-blue-600 font-semibold hover:text-blue-700 transition"
+            >
+              Sign In
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );

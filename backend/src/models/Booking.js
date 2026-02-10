@@ -49,6 +49,19 @@ const bookingSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    statusHistory: [
+      {
+        status: { type: String, required: true },
+        timestamp: { type: Date, default: Date.now },
+        note: String,
+      },
+    ],
+    priority: {
+      type: String,
+      enum: ['low', 'normal', 'high', 'urgent'],
+      default: 'normal',
+    },
+    assignedTech: String,
   },
   { timestamps: true }
 );

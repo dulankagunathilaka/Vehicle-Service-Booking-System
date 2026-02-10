@@ -1,5 +1,21 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Car,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  AlertCircle,
+  ListChecks,
+  CalendarClock,
+  ClipboardCheck,
+  Clock,
+  DollarSign,
+  StickyNote,
+  Wrench,
+  Shield,
+  Sparkles,
+} from "lucide-react";
 
 function BookingPage() {
   const navigate = useNavigate();
@@ -23,7 +39,6 @@ function BookingPage() {
     notes: "",
   });
 
-  // Fetch services on component mount
   useEffect(() => {
     fetchServices();
   }, []);
@@ -32,9 +47,7 @@ function BookingPage() {
     try {
       const response = await fetch("http://localhost:5000/api/services");
       const data = await response.json();
-      if (data.success) {
-        setServices(data.data);
-      }
+      if (data.success) setServices(data.data);
     } catch (error) {
       console.error("Error fetching services:", error);
     }
@@ -42,75 +55,54 @@ function BookingPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleVehicleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      vehicleInfo: {
-        ...prev.vehicleInfo,
-        [name]: value,
-      },
+      vehicleInfo: { ...prev.vehicleInfo, [name]: value },
     }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const validateStep = () => {
     const newErrors = {};
-
-    if (step === 1) {
-      if (!formData.serviceId) {
-        newErrors.serviceId = "Please select a service";
-      }
-    } else if (step === 2) {
+    if (step === 1 && !formData.serviceId)
+      newErrors.serviceId = "Please select a service";
+    if (step === 2) {
       if (!formData.vehicleInfo.make)
         newErrors.make = "Vehicle make is required";
       if (!formData.vehicleInfo.model)
         newErrors.model = "Vehicle model is required";
       if (!formData.vehicleInfo.licensePlate)
         newErrors.licensePlate = "License plate is required";
-    } else if (step === 3) {
+    }
+    if (step === 3) {
       if (!formData.bookingDate) newErrors.bookingDate = "Date is required";
       if (!formData.timeSlot) newErrors.timeSlot = "Time slot is required";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleNextStep = () => {
-    if (validateStep()) {
-      setStep(step + 1);
-    }
+    if (validateStep()) setStep(step + 1);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateStep()) return;
-
     const token = localStorage.getItem("token");
     if (!token) {
       navigate("/signin");
       return;
     }
-
     setLoading(true);
-
     try {
-      const selectedService = services.find(
-        (s) => s._id === formData.serviceId,
-      );
+      const sel = services.find((s) => s._id === formData.serviceId);
       const response = await fetch("http://localhost:5000/api/bookings", {
         method: "POST",
         headers: {
@@ -123,20 +115,14 @@ function BookingPage() {
           bookingDate: formData.bookingDate,
           timeSlot: formData.timeSlot,
           notes: formData.notes,
-          totalPrice: selectedService?.price || 0,
+          totalPrice: sel?.price || 0,
         }),
       });
-
       const data = await response.json();
-
       if (data.success) {
         setSuccess(true);
-        setTimeout(() => {
-          navigate("/");
-        }, 3000);
-      } else {
-        setErrors({ submit: data.message || "Booking failed" });
-      }
+        setTimeout(() => navigate("/"), 3000);
+      } else setErrors({ submit: data.message || "Booking failed" });
     } catch (error) {
       setErrors({ submit: "Network error. Please try again." });
     } finally {
@@ -156,504 +142,639 @@ function BookingPage() {
     "05:00 PM",
   ];
 
+  const stepInfo = [
+    { num: 1, label: "Service", desc: "Choose a service", Icon: ListChecks },
+    { num: 2, label: "Vehicle", desc: "Your vehicle info", Icon: Car },
+    {
+      num: 3,
+      label: "Schedule",
+      desc: "Pick date & time",
+      Icon: CalendarClock,
+    },
+    { num: 4, label: "Review", desc: "Confirm booking", Icon: ClipboardCheck },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="h-16 px-4 sm:px-6 flex items-center justify-between">
+      <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 hover:opacity-80 transition"
+            className="flex items-center gap-3 group"
           >
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-lg font-bold text-white">AS</span>
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition">
+              <Car className="w-5 h-5 text-white" />
             </div>
-            <span className="text-gray-900 font-bold text-lg hidden sm:inline">
-              AutoServe
-            </span>
+            <div className="hidden sm:block">
+              <h1 className="text-lg font-bold text-gray-800 leading-tight">
+                AutoServe
+              </h1>
+              <p className="text-[10px] text-blue-600 font-semibold tracking-wider uppercase">
+                Vehicle Service Pro
+              </p>
+            </div>
           </button>
           <button
             onClick={() => navigate("/")}
-            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+            className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 font-medium transition"
           >
-            ← Back
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
           </button>
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col px-4 sm:px-6 py-4">
-        {success && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 text-center animate-pulse">
-            <p className="text-green-800 font-semibold">
-              ✓ Booking confirmed! Redirecting...
+      {/* Compact Hero */}
+      <section className="bg-gradient-to-r from-gray-900 via-blue-900 to-gray-900 text-white">
+        <div className="container mx-auto px-6 py-5 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">
+              Book Your{" "}
+              <span className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
+                Service
+              </span>
+            </h1>
+            <p className="text-blue-200/80 text-xs mt-1">
+              Follow the steps to schedule your vehicle service appointment
             </p>
           </div>
-        )}
-
-        {errors.submit && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 animate-shake">
-            <p className="text-red-800 text-sm font-semibold">
-              {errors.submit}
-            </p>
+          <div className="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5">
+            <Sparkles className="w-4 h-4 text-cyan-400" />
+            <span className="text-xs font-medium text-blue-200">
+              Book in under 2 minutes
+            </span>
           </div>
-        )}
+        </div>
+      </section>
 
-        <div className="flex-1 flex flex-col bg-white rounded-lg shadow overflow-hidden">
-          {/* Progress Steps */}
-          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              {[1, 2, 3, 4].map((num) => (
-                <div key={num} className="flex items-center flex-1">
+      {/* Progress Steps Bar */}
+      <div className="bg-white border-b border-gray-100 shadow-sm">
+        <div className="container mx-auto px-6 py-3">
+          <div className="flex items-center justify-between">
+            {stepInfo.map((s, index) => (
+              <div key={s.num} className="flex items-center flex-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (s.num < step) setStep(s.num);
+                  }}
+                  className={`flex items-center gap-3 ${s.num < step ? "cursor-pointer" : "cursor-default"}`}
+                >
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300 ${
-                      step >= num
-                        ? "bg-blue-600 text-white scale-100 shadow-md"
-                        : "bg-gray-200 text-gray-600 scale-90"
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center font-semibold text-sm transition-all duration-300 flex-shrink-0 ${
+                      step === s.num
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
+                        : step > s.num
+                          ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
+                          : "bg-gray-100 text-gray-400"
                     }`}
                   >
-                    {num}
+                    {step > s.num ? (
+                      <CheckCircle2 className="w-5 h-5" />
+                    ) : (
+                      <s.Icon className="w-5 h-5" />
+                    )}
                   </div>
-                  {num < 4 && (
-                    <div
-                      className={`flex-1 h-1 mx-2 transition-all duration-300 ${
-                        step > num ? "bg-blue-600" : "bg-gray-200"
-                      }`}
-                    ></div>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-semibold text-gray-900">
-                {step === 1 && "Select Your Service"}
-                {step === 2 && "Vehicle Information"}
-                {step === 3 && "Choose Date & Time"}
-                {step === 4 && "Review Booking"}
+                  <div className="hidden sm:block text-left">
+                    <p
+                      className={`text-xs font-bold ${step >= s.num ? "text-gray-900" : "text-gray-400"}`}
+                    >
+                      {s.label}
+                    </p>
+                    <p className="text-[10px] text-gray-400">{s.desc}</p>
+                  </div>
+                </button>
+                {index < stepInfo.length - 1 && (
+                  <div
+                    className={`flex-1 h-0.5 mx-4 rounded-full transition-all duration-500 ${
+                      step > s.num ? "bg-emerald-400" : "bg-gray-200"
+                    }`}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <main className="flex-1 container mx-auto px-6 py-6">
+        {/* Alerts */}
+        {success && (
+          <div className="mb-6 flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 px-5 py-4 rounded-xl animate-pulse">
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold">
+                Booking confirmed successfully!
+              </p>
+              <p className="text-xs text-emerald-600">
+                Redirecting to home page...
               </p>
             </div>
           </div>
+        )}
+        {errors.submit && (
+          <div className="mb-6 flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-xl">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <span className="text-sm font-medium">{errors.submit}</span>
+          </div>
+        )}
 
-          {/* Form Content */}
-          <form
-            onSubmit={handleSubmit}
-            className="flex-1 flex flex-col p-6 overflow-auto"
-          >
-            {/* Step 1: Service Selection */}
-            {step === 1 && (
-              <div className="animate-fadeIn">
-                <h2 className="text-xl font-bold text-gray-900 mb-2">
-                  Select a Service
-                </h2>
-                <p className="text-gray-600 text-sm mb-6">
-                  Choose the service you need
-                </p>
+        {/* Form Card */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <form onSubmit={handleSubmit}>
+            {/* Step Header inside card */}
+            <div className="px-6 pt-6 pb-4 border-b border-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                  {(() => {
+                    const StepIcon = stepInfo[step - 1].Icon;
+                    return <StepIcon className="w-5 h-5 text-blue-600" />;
+                  })()}
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {stepInfo[step - 1].label}
+                  </h2>
+                  <p className="text-xs text-gray-400">
+                    {stepInfo[step - 1].desc}
+                  </p>
+                </div>
+                <span className="ml-auto text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                  Step {step} of 4
+                </span>
+              </div>
+            </div>
 
-                <div className="grid md:grid-cols-2 gap-3">
-                  {services.length > 0 ? (
-                    services.map((service) => (
-                      <button
-                        key={service._id}
-                        type="button"
-                        onClick={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            serviceId: service._id,
-                          }));
-                          setErrors({});
-                        }}
-                        className={`text-left p-4 rounded-lg border-2 transition-all duration-300 transform hover:shadow-md ${
-                          formData.serviceId === service._id
-                            ? "border-blue-600 bg-blue-50 scale-102 shadow-md"
-                            : "border-gray-200 bg-gray-50 hover:border-blue-300 hover:scale-101"
-                        }`}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-gray-900 text-sm">
-                            {service.name}
-                          </h3>
-                          {formData.serviceId === service._id && (
-                            <span className="inline-block w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs animate-scaleIn">
-                              ✓
+            <div className="p-6">
+              {/* Step 1: Service Selection */}
+              {step === 1 && (
+                <div>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Choose the service your vehicle needs from the options below
+                  </p>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    {services.length > 0 ? (
+                      services.map((service) => (
+                        <button
+                          key={service._id}
+                          type="button"
+                          onClick={() => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              serviceId: service._id,
+                            }));
+                            setErrors({});
+                          }}
+                          className={`text-left p-5 rounded-xl border-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-md ${
+                            formData.serviceId === service._id
+                              ? "border-blue-500 bg-blue-50/50 shadow-md shadow-blue-100"
+                              : "border-gray-200 hover:border-blue-300"
+                          }`}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <h3 className="font-bold text-gray-900 text-sm">
+                              {service.name}
+                            </h3>
+                            {formData.serviceId === service._id && (
+                              <CheckCircle2 className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mb-3 line-clamp-2 leading-relaxed">
+                            {service.description}
+                          </p>
+                          <div className="flex justify-between items-end pt-2 border-t border-gray-100">
+                            <span className="text-lg font-bold text-blue-600">
+                              ${service.price}
                             </span>
-                          )}
+                            <span className="text-xs text-gray-400 flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md">
+                              <Clock className="w-3 h-3" />
+                              {service.duration} min
+                            </span>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="col-span-full text-center py-12">
+                        <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                          <ListChecks className="w-7 h-7 text-gray-300" />
                         </div>
-                        <p className="text-xs text-gray-600 mb-3 line-clamp-2">
-                          {service.description}
+                        <p className="text-gray-500 text-sm">
+                          Loading available services...
                         </p>
-                        <div className="flex justify-between items-end">
-                          <span className="text-sm font-bold text-blue-600">
-                            ${service.price}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {service.duration}m
-                          </span>
-                        </div>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="col-span-2 text-center py-8">
-                      <p className="text-gray-500">Loading services...</p>
-                    </div>
+                      </div>
+                    )}
+                  </div>
+                  {errors.serviceId && (
+                    <p className="text-red-500 text-xs mt-3 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      {errors.serviceId}
+                    </p>
                   )}
                 </div>
+              )}
 
-                {errors.serviceId && (
-                  <p className="text-red-600 text-xs mt-4 font-medium">
-                    {errors.serviceId}
+              {/* Step 2: Vehicle Information */}
+              {step === 2 && (
+                <div>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Tell us about your vehicle so we can serve you better
                   </p>
-                )}
-              </div>
-            )}
-
-            {/* Step 2: Vehicle Information */}
-            {step === 2 && (
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Vehicle Information
-                </h2>
-                <p className="text-gray-600 text-sm mb-6">
-                  Tell us about your vehicle
-                </p>
-
-                <div className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Make
-                      </label>
-                      <input
-                        type="text"
-                        name="make"
-                        value={formData.vehicleInfo.make}
-                        onChange={handleVehicleChange}
-                        placeholder="Toyota"
-                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                          errors.make ? "border-red-400" : "border-gray-300"
-                        }`}
-                      />
-                      {errors.make && (
-                        <p className="text-red-600 text-xs mt-1">
-                          {errors.make}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Model
-                      </label>
-                      <input
-                        type="text"
-                        name="model"
-                        value={formData.vehicleInfo.model}
-                        onChange={handleVehicleChange}
-                        placeholder="Camry"
-                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                          errors.model ? "border-red-400" : "border-gray-300"
-                        }`}
-                      />
-                      {errors.model && (
-                        <p className="text-red-600 text-xs mt-1">
-                          {errors.model}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Year
-                      </label>
-                      <input
-                        type="number"
-                        name="year"
-                        value={formData.vehicleInfo.year}
-                        onChange={handleVehicleChange}
-                        min="1990"
-                        max={new Date().getFullYear()}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        License Plate
-                      </label>
-                      <input
-                        type="text"
-                        name="licensePlate"
-                        value={formData.vehicleInfo.licensePlate}
-                        onChange={handleVehicleChange}
-                        placeholder="ABC123"
-                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                          errors.licensePlate
-                            ? "border-red-400"
-                            : "border-gray-300"
-                        }`}
-                      />
-                      {errors.licensePlate && (
-                        <p className="text-red-600 text-xs mt-1">
-                          {errors.licensePlate}
-                        </p>
-                      )}
-                    </div>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[
+                      {
+                        name: "make",
+                        label: "Make",
+                        placeholder: "e.g. Toyota",
+                        error: errors.make,
+                      },
+                      {
+                        name: "model",
+                        label: "Model",
+                        placeholder: "e.g. Camry",
+                        error: errors.model,
+                      },
+                      {
+                        name: "year",
+                        label: "Year",
+                        placeholder: "",
+                        type: "number",
+                      },
+                      {
+                        name: "licensePlate",
+                        label: "License Plate",
+                        placeholder: "e.g. ABC-1234",
+                        error: errors.licensePlate,
+                      },
+                    ].map((field) => (
+                      <div key={field.name}>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                          {field.label} {field.error ? "" : ""}
+                        </label>
+                        <input
+                          type={field.type || "text"}
+                          name={field.name}
+                          value={formData.vehicleInfo[field.name]}
+                          onChange={handleVehicleChange}
+                          placeholder={field.placeholder}
+                          min={field.name === "year" ? "1990" : undefined}
+                          max={
+                            field.name === "year"
+                              ? new Date().getFullYear()
+                              : undefined
+                          }
+                          className={`w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-all duration-200 text-sm ${
+                            field.error
+                              ? "border-red-400 focus:border-red-500 bg-red-50/50"
+                              : "border-gray-200 focus:border-blue-500 hover:border-gray-300"
+                          }`}
+                        />
+                        {field.error && (
+                          <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {field.error}
+                          </p>
+                        )}
+                      </div>
+                    ))}
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Color
+                  <div className="mt-4">
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Color (Optional)
                     </label>
                     <input
                       type="text"
                       name="color"
                       value={formData.vehicleInfo.color}
                       onChange={handleVehicleChange}
-                      placeholder="Silver"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g. Silver"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 hover:border-gray-300 focus:outline-none transition-all duration-200 text-sm"
                     />
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Step 3: Date & Time */}
-            {step === 3 && (
-              <div className="animate-fadeIn">
-                <h2 className="text-xl font-bold text-gray-900 mb-2">
-                  Schedule Appointment
-                </h2>
-                <p className="text-gray-600 text-sm mb-5">
-                  Choose your preferred date and time
-                </p>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-2">
-                      Select Date
-                    </label>
-                    <input
-                      type="date"
-                      name="bookingDate"
-                      value={formData.bookingDate}
-                      onChange={handleChange}
-                      min={new Date().toISOString().split("T")[0]}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm ${
-                        errors.bookingDate
-                          ? "border-red-400"
-                          : "border-gray-300"
-                      }`}
-                    />
-                    {errors.bookingDate && (
-                      <p className="text-red-600 text-xs mt-1">
-                        {errors.bookingDate}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-3">
-                      Select Time Slot
-                    </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {timeSlots.map((slot) => (
-                        <button
-                          key={slot}
-                          type="button"
-                          onClick={() => {
-                            setFormData((prev) => ({
-                              ...prev,
-                              timeSlot: slot,
-                            }));
-                            setErrors((prev) => ({ ...prev, timeSlot: "" }));
-                          }}
-                          className={`py-2 px-2 rounded-lg font-medium text-xs transition-all duration-300 transform ${
-                            formData.timeSlot === slot
-                              ? "bg-blue-600 text-white shadow-md scale-105"
-                              : "border-2 border-gray-300 text-gray-700 hover:border-blue-400 hover:scale-102"
-                          }`}
-                        >
-                          {slot}
-                        </button>
-                      ))}
-                    </div>
-                    {errors.timeSlot && (
-                      <p className="text-red-600 text-xs mt-2">
-                        {errors.timeSlot}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 4: Review */}
-            {step === 4 && (
-              <div className="animate-fadeIn">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">
-                  Review Your Booking
-                </h2>
-
-                <div className="space-y-3 mb-5">
-                  <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow duration-300 bg-gray-50">
-                    <p className="text-xs text-gray-600 font-medium mb-1">
-                      Service
-                    </p>
-                    <p className="font-semibold text-gray-900 text-sm">
-                      {selectedService?.name}
-                    </p>
-                    <p className="text-sm text-blue-600 font-bold mt-1">
-                      ${selectedService?.price}
-                    </p>
-                  </div>
-
-                  <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow duration-300 bg-gray-50">
-                    <p className="text-xs text-gray-600 font-medium mb-1">
-                      Vehicle
-                    </p>
-                    <p className="font-semibold text-gray-900 text-sm">
-                      {formData.vehicleInfo.year} {formData.vehicleInfo.make}{" "}
-                      {formData.vehicleInfo.model}
-                    </p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      {formData.vehicleInfo.licensePlate} •{" "}
-                      {formData.vehicleInfo.color}
-                    </p>
-                  </div>
-
-                  <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow duration-300 bg-gray-50">
-                    <p className="text-xs text-gray-600 font-medium mb-1">
-                      Appointment
-                    </p>
-                    <p className="font-semibold text-gray-900 text-sm">
-                      {new Date(formData.bookingDate).toLocaleDateString(
-                        "en-US",
-                        {
-                          weekday: "short",
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        },
-                      )}
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {formData.timeSlot}
-                    </p>
-                  </div>
-
-                  {formData.notes && (
-                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                      <p className="text-xs text-gray-600 font-medium mb-1">
-                        Notes
-                      </p>
-                      <p className="text-sm text-gray-700">{formData.notes}</p>
-                    </div>
-                  )}
-                </div>
-
+              {/* Step 3: Date & Time */}
+              {step === 3 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Special Requests (Optional)
-                  </label>
-                  <textarea
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    placeholder="Any special requests or notes..."
-                    rows="3"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  ></textarea>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Pick a date and time that works best for you
+                  </p>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                        Select Date
+                      </label>
+                      <input
+                        type="date"
+                        name="bookingDate"
+                        value={formData.bookingDate}
+                        onChange={handleChange}
+                        min={new Date().toISOString().split("T")[0]}
+                        className={`w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-all duration-200 text-sm ${
+                          errors.bookingDate
+                            ? "border-red-400 bg-red-50/50"
+                            : "border-gray-200 focus:border-blue-500 hover:border-gray-300"
+                        }`}
+                      />
+                      {errors.bookingDate && (
+                        <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          {errors.bookingDate}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Select Time Slot
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {timeSlots.map((slot) => (
+                          <button
+                            key={slot}
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                timeSlot: slot,
+                              }));
+                              setErrors((prev) => ({ ...prev, timeSlot: "" }));
+                            }}
+                            className={`py-3 px-3 rounded-xl font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+                              formData.timeSlot === slot
+                                ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
+                                : "border-2 border-gray-200 text-gray-600 hover:border-blue-400 hover:-translate-y-0.5"
+                            }`}
+                          >
+                            <Clock className="w-4 h-4" />
+                            {slot}
+                          </button>
+                        ))}
+                      </div>
+                      {errors.timeSlot && (
+                        <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          {errors.timeSlot}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                        Special Requests (Optional)
+                      </label>
+                      <textarea
+                        name="notes"
+                        value={formData.notes}
+                        onChange={handleChange}
+                        placeholder="Any special requests or notes for the technician..."
+                        rows="3"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 hover:border-gray-300 focus:outline-none transition-all duration-200 text-sm resize-none"
+                      />
+                    </div>
+                  </div>
                 </div>
+              )}
+
+              {/* Step 4: Review */}
+              {step === 4 && (
+                <div>
+                  <p className="text-sm text-gray-500 mb-5">
+                    Please review all details before confirming your booking
+                  </p>
+
+                  <div className="grid md:grid-cols-2 gap-4 mb-5">
+                    {/* Service */}
+                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-5 border border-blue-100">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <ListChecks className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">
+                          Service
+                        </p>
+                      </div>
+                      <p className="font-bold text-gray-900 text-lg">
+                        {selectedService?.name}
+                      </p>
+                      <div className="flex items-center gap-3 mt-2">
+                        <span className="text-xl font-bold text-blue-600 flex items-center">
+                          <DollarSign className="w-5 h-5" />
+                          {selectedService?.price}
+                        </span>
+                        <span className="text-xs text-gray-400 bg-white px-2 py-1 rounded-md flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {selectedService?.duration} min
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Vehicle */}
+                    <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <Car className="w-4 h-4 text-gray-600" />
+                        </div>
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          Vehicle
+                        </p>
+                      </div>
+                      <p className="font-bold text-gray-900">
+                        {formData.vehicleInfo.year} {formData.vehicleInfo.make}{" "}
+                        {formData.vehicleInfo.model}
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {formData.vehicleInfo.licensePlate}
+                        {formData.vehicleInfo.color &&
+                          ` \u00B7 ${formData.vehicleInfo.color}`}
+                      </p>
+                    </div>
+
+                    {/* Appointment */}
+                    <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <CalendarClock className="w-4 h-4 text-gray-600" />
+                        </div>
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          Appointment
+                        </p>
+                      </div>
+                      <p className="font-bold text-gray-900">
+                        {new Date(formData.bookingDate).toLocaleDateString(
+                          "en-US",
+                          {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          },
+                        )}
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {formData.timeSlot}
+                      </p>
+                    </div>
+
+                    {/* Notes */}
+                    {formData.notes && (
+                      <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
+                            <StickyNote className="w-4 h-4 text-gray-600" />
+                          </div>
+                          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Notes
+                          </p>
+                        </div>
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          {formData.notes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Confirmation notice */}
+                  <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100 flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-emerald-800">
+                        Ready to confirm
+                      </p>
+                      <p className="text-xs text-emerald-600 mt-0.5">
+                        Click the button below to finalize your booking. You'll
+                        receive a confirmation shortly.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Navigation */}
+            <div className="px-6 pb-6">
+              <div className="flex gap-3 justify-between pt-5 border-t border-gray-100">
+                {step > 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => setStep(step - 1)}
+                    className="px-6 py-3 text-gray-600 font-medium rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 flex items-center gap-2 text-sm"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Previous
+                  </button>
+                ) : (
+                  <div />
+                )}
+
+                {step < 4 ? (
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="group px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 flex items-center gap-2 text-sm"
+                  >
+                    Continue
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 disabled:bg-gray-300 disabled:shadow-none disabled:cursor-not-allowed flex items-center gap-2 text-sm"
+                  >
+                    {loading ? (
+                      <>
+                        <svg
+                          className="animate-spin w-5 h-5"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                          />
+                        </svg>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        Confirm Booking
+                        <CheckCircle2 className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
-            )}
-
-            {/* Navigation Buttons */}
-            <div className="flex gap-3 justify-between mt-auto pt-6 border-t border-gray-200">
-              {step > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setStep(step - 1)}
-                  className="px-6 py-2 text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-all duration-200 transform hover:scale-102"
-                >
-                  ← Previous
-                </button>
-              )}
-
-              {step < 4 ? (
-                <button
-                  type="button"
-                  onClick={handleNextStep}
-                  className="ml-auto px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 transform hover:scale-102 active:scale-95"
-                >
-                  Next →
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="ml-auto px-8 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 transform hover:scale-102 active:scale-95 disabled:bg-gray-400 disabled:hover:scale-100"
-                >
-                  {loading ? "Processing..." : "Confirm Booking"}
-                </button>
-              )}
             </div>
           </form>
         </div>
       </main>
 
-      <style>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
+      {/* Trust Badges */}
+      <section className="bg-white border-t border-gray-100">
+        <div className="container mx-auto px-6 py-6">
+          <div className="grid grid-cols-3 gap-6 text-center">
+            <div>
+              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mx-auto mb-2">
+                <Shield className="w-5 h-5 text-blue-600" />
+              </div>
+              <p className="text-xs font-bold text-gray-800">Secure Booking</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                Your data is encrypted
+              </p>
+            </div>
+            <div>
+              <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              </div>
+              <p className="text-xs font-bold text-gray-800">
+                Instant Confirmation
+              </p>
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                Get notified immediately
+              </p>
+            </div>
+            <div>
+              <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center mx-auto mb-2">
+                <Wrench className="w-5 h-5 text-amber-600" />
+              </div>
+              <p className="text-xs font-bold text-gray-800">
+                Expert Technicians
+              </p>
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                Certified professionals
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        @keyframes scaleIn {
-          from {
-            transform: scale(0);
-            opacity: 0;
-          }
-          to {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-5px); }
-          75% { transform: translateX(5px); }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.4s ease-out;
-        }
-
-        .animate-scaleIn {
-          animation: scaleIn 0.3s ease-out;
-        }
-
-        .animate-shake {
-          animation: shake 0.5s ease-in-out;
-        }
-
-        .scale-101 {
-          transform: scale(1.01);
-        }
-
-        .scale-102 {
-          transform: scale(1.02);
-        }
-
-        input:focus,
-        textarea:focus,
-        select:focus {
-          transform: translateY(-1px);
-        }
-      `}</style>
+      {/* Footer */}
+      <footer className="bg-gray-900 text-gray-400">
+        <div className="container mx-auto px-4 py-6 text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Car className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-sm font-bold text-white">AutoServe</span>
+          </div>
+          <p className="text-xs">
+            Copyright 2026 AutoServe. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

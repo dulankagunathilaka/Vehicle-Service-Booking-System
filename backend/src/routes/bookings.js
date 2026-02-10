@@ -110,30 +110,29 @@ router.get('/:id', protect, async (req, res) => {
 // Update booking status (admin only)
 router.put('/:id', protect, authorize('admin'), async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, note, priority, assignedTech } = req.body;
 
-    const booking = await Booking.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true, runValidators: true }
-    );
-
+    const booking = await Booking.findById(req.params.id);
     if (!booking) {
-      return res.status(404).json({
-        success: false,
-        message: 'Booking not found',
-      });
+      return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    res.status(200).json({
-      success: true,
-      data: booking,
-    });
+    if (status && status !== booking.status) {
+      booking.status = status;
+      booking.statusHistory.push({
+        status,
+        timestamp: new Date(),
+        note: note || `Status changed to ${status}`,
+      });
+    }
+    if (priority) booking.priority = priority;
+    if (assignedTech !== undefined) booking.assignedTech = assignedTech;
+
+    await booking.save();
+
+    res.status(200).json({ success: true, data: booking });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(400).json({ success: false, message: error.message });
   }
 });
 
