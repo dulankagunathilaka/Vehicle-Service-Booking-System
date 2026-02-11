@@ -116,42 +116,6 @@ function SignUp() {
     }
   };
 
-  const InputField = ({
-    icon: Icon,
-    label,
-    name,
-    type = "text",
-    placeholder,
-    error,
-  }) => (
-    <div>
-      <label className="block text-sm font-semibold text-gray-700 mb-2">
-        {label}
-      </label>
-      <div className="relative">
-        <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-        <input
-          type={type}
-          name={name}
-          value={formData[name]}
-          onChange={handleChange}
-          placeholder={placeholder}
-          className={`w-full pl-12 pr-4 py-3.5 rounded-xl border-2 focus:outline-none transition-all duration-200 text-sm ${
-            error
-              ? "border-red-400 focus:border-red-500 bg-red-50/50"
-              : "border-gray-200 focus:border-blue-500 hover:border-gray-300"
-          }`}
-        />
-      </div>
-      {error && (
-        <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
-          <AlertCircle className="w-3 h-3" />
-          {error}
-        </p>
-      )}
-    </div>
-  );
-
   return (
     <div className="min-h-screen flex">
       {/* Left Panel - Branding */}
@@ -162,18 +126,10 @@ function SignUp() {
           <div className="absolute bottom-10 left-20 w-96 h-96 bg-indigo-500 rounded-full blur-3xl" />
         </div>
         <div className="relative z-10 flex flex-col justify-center px-16">
-          <a href="/" className="flex items-center gap-3 mb-12">
-            <img
-              src="/favicon.svg"
-              alt="AutoServe"
-              className="w-12 h-12 rounded-xl border border-white/20"
-            />
-            <div>
-              <h1 className="text-2xl font-bold text-white">AutoServe</h1>
-              <p className="text-[10px] text-blue-300 font-semibold tracking-wider uppercase">
-                Vehicle Service Pro
-              </p>
-            </div>
+          <a href="/" className="inline-block mb-12">
+            <h1 className="text-3xl font-extrabold text-white">
+              Auto<span className="text-blue-400">Serve</span>
+            </h1>
           </a>
           <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
             Join thousands of
@@ -206,13 +162,10 @@ function SignUp() {
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="flex justify-center mb-8 lg:hidden">
-            <a href="/" className="flex items-center gap-3">
-              <img
-                src="/favicon.svg"
-                alt="AutoServe"
-                className="w-11 h-11 rounded-xl shadow-md"
-              />
-              <span className="text-xl font-bold text-gray-800">AutoServe</span>
+            <a href="/">
+              <span className="text-2xl font-extrabold text-gray-900">
+                Auto<span className="text-blue-600">Serve</span>
+              </span>
             </a>
           </div>
 
@@ -240,45 +193,145 @@ function SignUp() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <InputField
-              icon={User}
-              label="Full Name"
-              name="name"
-              placeholder="John Doe"
-              error={errors.name}
-            />
-            <InputField
-              icon={Mail}
-              label="Email Address"
-              name="email"
-              type="email"
-              placeholder="you@example.com"
-              error={errors.email}
-            />
-            <InputField
-              icon={Phone}
-              label="Phone Number"
-              name="phone"
-              type="tel"
-              placeholder="1234567890"
-              error={errors.phone}
-            />
-            <InputField
-              icon={Lock}
-              label="Password"
-              name="password"
-              type="password"
-              placeholder="Min. 6 characters"
-              error={errors.password}
-            />
-            <InputField
-              icon={Lock}
-              label="Confirm Password"
-              name="confirmPassword"
-              type="password"
-              placeholder="Re-enter password"
-              error={errors.confirmPassword}
-            />
+            {/* Full Name */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Full Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="John Doe"
+                  className={`w-full pl-12 pr-4 py-3.5 rounded-xl border-2 focus:outline-none transition-all duration-200 text-sm ${
+                    errors.name
+                      ? "border-red-400 focus:border-red-500 bg-red-50/50"
+                      : "border-gray-200 focus:border-blue-500 hover:border-gray-300"
+                  }`}
+                />
+              </div>
+              {errors.name && (
+                <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {errors.name}
+                </p>
+              )}
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="you@example.com"
+                  className={`w-full pl-12 pr-4 py-3.5 rounded-xl border-2 focus:outline-none transition-all duration-200 text-sm ${
+                    errors.email
+                      ? "border-red-400 focus:border-red-500 bg-red-50/50"
+                      : "border-gray-200 focus:border-blue-500 hover:border-gray-300"
+                  }`}
+                />
+              </div>
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {errors.email}
+                </p>
+              )}
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Phone Number
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="1234567890"
+                  className={`w-full pl-12 pr-4 py-3.5 rounded-xl border-2 focus:outline-none transition-all duration-200 text-sm ${
+                    errors.phone
+                      ? "border-red-400 focus:border-red-500 bg-red-50/50"
+                      : "border-gray-200 focus:border-blue-500 hover:border-gray-300"
+                  }`}
+                />
+              </div>
+              {errors.phone && (
+                <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {errors.phone}
+                </p>
+              )}
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Min. 6 characters"
+                  className={`w-full pl-12 pr-4 py-3.5 rounded-xl border-2 focus:outline-none transition-all duration-200 text-sm ${
+                    errors.password
+                      ? "border-red-400 focus:border-red-500 bg-red-50/50"
+                      : "border-gray-200 focus:border-blue-500 hover:border-gray-300"
+                  }`}
+                />
+              </div>
+              {errors.password && (
+                <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {errors.password}
+                </p>
+              )}
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Re-enter password"
+                  className={`w-full pl-12 pr-4 py-3.5 rounded-xl border-2 focus:outline-none transition-all duration-200 text-sm ${
+                    errors.confirmPassword
+                      ? "border-red-400 focus:border-red-500 bg-red-50/50"
+                      : "border-gray-200 focus:border-blue-500 hover:border-gray-300"
+                  }`}
+                />
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {errors.confirmPassword}
+                </p>
+              )}
+            </div>
 
             {/* Submit */}
             <button

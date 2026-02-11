@@ -3,11 +3,9 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
   try {
     const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/autoserve';
-    console.log('Attempting to connect to MongoDB with URI:', uri.substring(0, 50) + '...');
+    console.log('Attempting to connect to MongoDB...');
     
     await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,
     });
     console.log('✓ MongoDB connected successfully');
@@ -19,3 +17,4 @@ const connectDB = async () => {
 };
 
 module.exports = connectDB;
+

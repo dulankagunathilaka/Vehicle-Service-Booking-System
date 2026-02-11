@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Bell,
   Loader,
@@ -33,6 +34,7 @@ const categoryColors = {
 };
 
 export default function AdminNotifications() {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -157,6 +159,52 @@ export default function AdminNotifications() {
     }
   };
 
+  const handleMarkAsRead = async (id) => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API}/notifications/${id}/admin-read`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotifications((prev) =>
+          prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)),
+        );
+      }
+    } catch (err) {
+      console.error("Mark as read failed:", err);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API}/notifications/admin-mark-all-read`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      }
+    } catch (err) {
+      console.error("Mark all read failed:", err);
+    }
+  };
+
+  const handleNotificationClick = (n) => {
+    if (!n.isRead) handleMarkAsRead(n._id);
+    const cat = n.category || "";
+    if (cat.startsWith("invoice") || cat.startsWith("payment")) {
+      navigate("/admin/billing");
+    } else if (cat.startsWith("booking") || cat === "service-complete") {
+      navigate("/admin/bookings");
+    }
+  };
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+
   const filtered = notifications
     .filter((n) => {
       if (filterCategory !== "all" && n.category !== filterCategory)
@@ -191,6 +239,18 @@ export default function AdminNotifications() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <button
+              onClick={handleMarkAllRead}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition"
+            >
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Mark All
+              Read
+              <span className="ml-0.5 w-5 h-5 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            </button>
+          )}
           <button
             onClick={() => setShowBroadcastModal(true)}
             className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-white text-sm font-semibold rounded-xl hover:bg-amber-400 transition"
@@ -310,21 +370,33 @@ export default function AdminNotifications() {
             return (
               <div
                 key={n._id}
-                className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all group"
+                onClick={() => handleNotificationClick(n)}
+                className={`bg-white rounded-2xl border p-5 shadow-sm hover:shadow-md transition-all group cursor-pointer ${
+                  n.isRead
+                    ? "border-gray-100"
+                    : "border-indigo-200 bg-indigo-50/30"
+                }`}
               >
                 <div className="flex items-start gap-4">
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${catColor}`}
-                  >
-                    {n.type === "sms" ? (
-                      <Smartphone className="w-5 h-5" />
-                    ) : (
-                      <Mail className="w-5 h-5" />
+                  <div className="relative flex-shrink-0">
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center ${catColor}`}
+                    >
+                      {n.type === "sms" ? (
+                        <Smartphone className="w-5 h-5" />
+                      ) : (
+                        <Mail className="w-5 h-5" />
+                      )}
+                    </div>
+                    {!n.isRead && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full border-2 border-white animate-pulse" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-bold text-gray-900">
+                      <p
+                        className={`text-sm font-bold ${n.isRead ? "text-gray-900" : "text-indigo-900"}`}
+                      >
                         {n.subject}
                       </p>
                       <span
@@ -353,14 +425,32 @@ export default function AdminNotifications() {
                         minute: "2-digit",
                       })}
                     </span>
+                    {!n.isRead && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMarkAsRead(n._id);
+                        }}
+                        title="Mark as read"
+                        className="p-2 rounded-xl hover:bg-emerald-50 text-gray-400 hover:text-emerald-600 transition opacity-0 group-hover:opacity-100"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                      </button>
+                    )}
                     <button
-                      onClick={() => setSelectedNotification(n)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedNotification(n);
+                      }}
                       className="p-2 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition opacity-0 group-hover:opacity-100"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(n._id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(n._id);
+                      }}
                       className="p-2 rounded-xl hover:bg-red-50 text-gray-400 hover:text-red-600 transition opacity-0 group-hover:opacity-100"
                     >
                       <Trash2 className="w-4 h-4" />

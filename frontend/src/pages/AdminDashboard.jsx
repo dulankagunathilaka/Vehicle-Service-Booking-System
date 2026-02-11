@@ -167,17 +167,9 @@ function AdminDashboard() {
             onClick={() => navigate("/")}
             className="flex items-center gap-3 group"
           >
-            <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition">
-              <Car className="w-6 h-6 text-white" />
-            </div>
-            <div className="hidden sm:block">
-              <h1 className="text-xl font-bold text-gray-800 leading-tight">
-                AutoServe
-              </h1>
-              <p className="text-[10px] text-blue-600 font-semibold tracking-wider uppercase">
-                Admin Panel
-              </p>
-            </div>
+            <h1 className="text-xl font-extrabold text-gray-900">
+              Auto<span className="text-blue-600">Serve</span>
+            </h1>
           </button>
 
           <button

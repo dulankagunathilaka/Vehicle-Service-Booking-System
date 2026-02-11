@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Car,
@@ -21,6 +21,10 @@ import {
   Star,
   DollarSign,
   Package,
+  CheckCircle2,
+  Mail,
+  Smartphone,
+  X,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -107,6 +111,30 @@ const breadcrumbMap = {
   ],
 };
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+const notifCategoryColors = {
+  "booking-confirmation": "bg-emerald-50 text-emerald-600",
+  "booking-update": "bg-blue-50 text-blue-600",
+  "booking-reminder": "bg-amber-50 text-amber-600",
+  "booking-cancelled": "bg-red-50 text-red-600",
+  "invoice-sent": "bg-purple-50 text-purple-600",
+  "payment-received": "bg-green-50 text-green-600",
+  "service-complete": "bg-cyan-50 text-cyan-600",
+  general: "bg-gray-50 text-gray-600",
+};
+
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "Just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return d === 1 ? "Yesterday" : `${d}d ago`;
+}
+
 export default function AdminLayout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -114,6 +142,81 @@ export default function AdminLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+
+  const fetchNotifications = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setNotifLoading(true);
+    try {
+      const res = await fetch(`${API}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) setNotifications(data.data || []);
+    } catch (err) {
+      console.error("Fetch notifications failed:", err);
+    } finally {
+      setNotifLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  const markAsRead = async (id) => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API}/notifications/${id}/admin-read`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotifications((prev) =>
+          prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)),
+        );
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const markAllRead = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API}/notifications/admin-mark-all-read`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleNotifClick = (n) => {
+    if (!n.isRead) markAsRead(n._id);
+    setShowNotifPanel(false);
+    const cat = n.category || "";
+    if (cat.startsWith("invoice") || cat.startsWith("payment")) {
+      navigate("/admin/billing");
+    } else if (cat.startsWith("booking") || cat === "service-complete") {
+      navigate("/admin/bookings");
+    } else {
+      navigate("/admin/notifications");
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -142,15 +245,16 @@ export default function AdminLayout({ children }) {
       >
         {/* Logo */}
         <div className="h-16 flex items-center px-4 border-b border-white/10 flex-shrink-0">
-          <img
-            src="/favicon.svg"
-            alt="AutoServe"
-            className="w-10 h-10 rounded-xl shadow-lg flex-shrink-0"
-          />
-          {!collapsed && (
-            <div className="ml-3 overflow-hidden">
-              <h1 className="text-sm font-bold leading-tight">AutoServe</h1>
-              <p className="text-[10px] text-blue-400 font-semibold tracking-wider uppercase">
+          {collapsed ? (
+            <span className="text-lg font-extrabold text-white mx-auto">
+              A<span className="text-blue-400">S</span>
+            </span>
+          ) : (
+            <div className="overflow-hidden">
+              <h1 className="text-lg font-extrabold text-white leading-tight">
+                Auto<span className="text-blue-400">Serve</span>
+              </h1>
+              <p className="text-[10px] text-gray-500 font-semibold tracking-wider uppercase">
                 Admin Panel
               </p>
             </div>
@@ -320,10 +424,148 @@ export default function AdminLayout({ children }) {
             </span>
 
             {/* Notifications */}
-            <button className="relative p-2 rounded-xl hover:bg-gray-100 transition text-gray-400 hover:text-gray-600">
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowNotifPanel(!showNotifPanel);
+                  setShowUserMenu(false);
+                }}
+                className="relative p-2 rounded-xl hover:bg-gray-100 transition text-gray-400 hover:text-gray-600"
+              >
+                <Bell className="w-4 h-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 rounded-full text-[9px] text-white flex items-center justify-center font-bold px-1">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {showNotifPanel && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowNotifPanel(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-1 w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+                    {/* Header */}
+                    <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-gray-900">
+                          Notifications
+                        </h3>
+                        {unreadCount > 0 && (
+                          <span className="w-5 h-5 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold">
+                            {unreadCount}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={markAllRead}
+                            className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setShowNotifPanel(false)}
+                          className="p-1 rounded-lg hover:bg-gray-100 transition"
+                        >
+                          <X className="w-3.5 h-3.5 text-gray-400" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* List */}
+                    <div className="max-h-[400px] overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="text-center py-10">
+                          <Bell className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+                          <p className="text-xs text-gray-400">
+                            No notifications
+                          </p>
+                        </div>
+                      ) : (
+                        <ul>
+                          {notifications.slice(0, 15).map((n) => {
+                            const catColor =
+                              notifCategoryColors[n.category] ||
+                              notifCategoryColors.general;
+                            return (
+                              <li
+                                key={n._id}
+                                onClick={() => handleNotifClick(n)}
+                                className={`flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-gray-50 last:border-0 group ${
+                                  n.isRead
+                                    ? "hover:bg-gray-50"
+                                    : "bg-indigo-50/40 hover:bg-indigo-50/70"
+                                }`}
+                              >
+                                <div className="relative flex-shrink-0 mt-0.5">
+                                  <div
+                                    className={`w-8 h-8 rounded-lg flex items-center justify-center ${catColor}`}
+                                  >
+                                    {n.type === "sms" ? (
+                                      <Smartphone className="w-3.5 h-3.5" />
+                                    ) : (
+                                      <Mail className="w-3.5 h-3.5" />
+                                    )}
+                                  </div>
+                                  {!n.isRead && (
+                                    <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-indigo-500 rounded-full border-2 border-white" />
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p
+                                    className={`text-xs leading-snug truncate ${
+                                      n.isRead
+                                        ? "text-gray-600"
+                                        : "text-gray-800 font-semibold"
+                                    }`}
+                                  >
+                                    {n.subject}
+                                  </p>
+                                  <p className="text-[10px] text-gray-400 mt-0.5 truncate">
+                                    {n.recipientId?.name || "Unknown"} ·{" "}
+                                    {timeAgo(n.createdAt)}
+                                  </p>
+                                </div>
+                                {!n.isRead && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      markAsRead(n._id);
+                                    }}
+                                    title="Mark as read"
+                                    className="shrink-0 p-1 rounded-lg text-gray-300 hover:text-emerald-500 hover:bg-emerald-50 transition opacity-0 group-hover:opacity-100"
+                                  >
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="border-t border-gray-100 px-4 py-2.5">
+                      <button
+                        onClick={() => {
+                          setShowNotifPanel(false);
+                          navigate("/admin/notifications");
+                        }}
+                        className="w-full text-center text-xs font-semibold text-indigo-600 hover:text-indigo-700 py-1 rounded-lg hover:bg-indigo-50 transition"
+                      >
+                        View all notifications
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* User dropdown */}
             <div className="relative">

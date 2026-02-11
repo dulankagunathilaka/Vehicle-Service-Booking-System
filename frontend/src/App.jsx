@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -20,17 +20,26 @@ import {
   MapPin,
   ClipboardCheck,
   Headphones,
-  ChevronDown,
-  Menu,
-  X,
-  LayoutDashboard,
-  LogOut,
+  Star,
+  Clock,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Quote,
+  Gauge,
+  Zap,
+  Timer,
+  Activity,
+  TrendingUp,
+  CircleCheck,
 } from "lucide-react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import Navbar from "./components/Navbar";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import BookingPage from "./pages/Booking";
 import CustomerDashboard from "./pages/CustomerDashboard";
+import PaymentsPage from "./pages/Payments";
 import LearnMore from "./pages/LearnMore";
 import AdminLayout from "./components/AdminLayout";
 import AdminOverview from "./pages/admin/AdminOverview";
@@ -69,14 +78,38 @@ function AdminGuard({ children }) {
   return <AdminLayout>{children}</AdminLayout>;
 }
 
+// Layout wrapper that includes the shared Navbar
+function WithNavbar({ children, transparent }) {
+  return (
+    <>
+      <Navbar transparent={transparent} />
+      {children}
+    </>
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
       <Router>
         <div className="min-h-screen bg-white">
           <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/learn-more" element={<LearnMore />} />
+            <Route
+              path="/"
+              element={
+                <WithNavbar transparent>
+                  <HomePage />
+                </WithNavbar>
+              }
+            />
+            <Route
+              path="/learn-more"
+              element={
+                <WithNavbar>
+                  <LearnMore />
+                </WithNavbar>
+              }
+            />
             <Route
               path="/signup"
               element={
@@ -97,7 +130,9 @@ function App() {
               path="/booking"
               element={
                 <CustomerGuard>
-                  <BookingPage />
+                  <WithNavbar>
+                    <BookingPage />
+                  </WithNavbar>
                 </CustomerGuard>
               }
             />
@@ -105,7 +140,19 @@ function App() {
               path="/dashboard"
               element={
                 <CustomerGuard>
-                  <CustomerDashboard />
+                  <WithNavbar>
+                    <CustomerDashboard />
+                  </WithNavbar>
+                </CustomerGuard>
+              }
+            />
+            <Route
+              path="/payments"
+              element={
+                <CustomerGuard>
+                  <WithNavbar>
+                    <PaymentsPage />
+                  </WithNavbar>
                 </CustomerGuard>
               }
             />
@@ -271,362 +318,401 @@ const stats = [
   { Icon: Headphones, value: "24/7", label: "Customer Support" },
 ];
 
-function HomePage() {
-  const { isAuthenticated, isAdmin, user, logout } = useAuth();
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [activeSection, setActiveSection] = useState("");
-
-  // Scroll detection for navbar style + active section
+// Animated counter hook
+function useCountUp(target, duration = 2000) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const started = useRef(false);
   useEffect(() => {
-    const onScroll = () => {
-      setScrolled(window.scrollY > 30);
-      const ids = ["services", "features"];
-      let found = "";
-      for (const id of ids) {
-        const el = document.getElementById(id);
-        if (el) {
-          const r = el.getBoundingClientRect();
-          if (r.top <= 100 && r.bottom > 100) found = id;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !started.current) {
+          started.current = true;
+          const start = performance.now();
+          const num = parseInt(target.replace(/[^0-9]/g, ""), 10);
+          const step = (now) => {
+            const progress = Math.min((now - start) / duration, 1);
+            setCount(Math.floor(progress * num));
+            if (progress < 1) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
         }
-      }
-      setActiveSection(found);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+      },
+      { threshold: 0.3 },
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [target, duration]);
+  const suffix = target.replace(/[0-9,]/g, "");
+  const formatted = count.toLocaleString() + suffix;
+  return { ref, formatted };
+}
 
-  // Close on Escape
+function AnimatedStat({ Icon, value, label }) {
+  const { ref, formatted } = useCountUp(value);
+  return (
+    <div ref={ref} className="text-center group">
+      <div className="w-14 h-14 mx-auto mb-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+        <Icon className="w-7 h-7 text-blue-300" />
+      </div>
+      <div className="text-3xl font-bold text-white mb-1">{formatted}</div>
+      <p className="text-sm text-gray-400">{label}</p>
+    </div>
+  );
+}
+
+const howItWorks = [
+  {
+    step: 1,
+    Icon: Search,
+    title: "Choose Service",
+    desc: "Browse our range of services and pick what your vehicle needs.",
+  },
+  {
+    step: 2,
+    Icon: CalendarCheck,
+    title: "Pick Date & Time",
+    desc: "Select a convenient time slot that fits your schedule.",
+  },
+  {
+    step: 3,
+    Icon: CheckCircle,
+    title: "Get Confirmed",
+    desc: "Receive instant confirmation and real-time status updates.",
+  },
+];
+
+// Typing effect hook
+function useTypingEffect(
+  words,
+  typingSpeed = 100,
+  deleteSpeed = 60,
+  pauseTime = 2000,
+) {
+  const [text, setText] = useState("");
+  const [wordIdx, setWordIdx] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "Escape") { setShowUserMenu(false); setMobileOpen(false); }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+    const word = words[wordIdx];
+    const timer = setTimeout(
+      () => {
+        if (!isDeleting) {
+          setText(word.substring(0, text.length + 1));
+          if (text.length + 1 === word.length) {
+            setTimeout(() => setIsDeleting(true), pauseTime);
+          }
+        } else {
+          setText(word.substring(0, text.length - 1));
+          if (text.length === 0) {
+            setIsDeleting(false);
+            setWordIdx((prev) => (prev + 1) % words.length);
+          }
+        }
+      },
+      isDeleting ? deleteSpeed : typingSpeed,
+    );
+    return () => clearTimeout(timer);
+  }, [text, isDeleting, wordIdx, words, typingSpeed, deleteSpeed, pauseTime]);
+  return text;
+}
 
-  // Lock body when mobile menu open
+// Testimonials data
+const testimonials = [
+  {
+    name: "Sarah Johnson",
+    role: "Toyota Camry Owner",
+    text: "AutoServe made booking my car service incredibly easy. I got confirmation within seconds and real-time updates throughout.",
+    rating: 5,
+  },
+  {
+    name: "Michael Chen",
+    role: "Honda Civic Owner",
+    text: "The best vehicle service platform I've used. Transparent pricing, certified mechanics, and the booking process is seamless.",
+    rating: 5,
+  },
+  {
+    name: "Priya Patel",
+    role: "BMW 3 Series Owner",
+    text: "I love the real-time tracking feature. I always know exactly what stage my vehicle is at. Highly recommended!",
+    rating: 5,
+  },
+];
+
+// Live activity feed for hero
+const liveActivities = [
+  {
+    text: "Oil Change completed",
+    vehicle: "Toyota Camry",
+    time: "Just now",
+    Icon: CheckCircle,
+    color: "text-emerald-400",
+  },
+  {
+    text: "Brake inspection started",
+    vehicle: "Honda Civic",
+    time: "2 min ago",
+    Icon: Activity,
+    color: "text-amber-400",
+  },
+  {
+    text: "New booking confirmed",
+    vehicle: "BMW X5",
+    time: "5 min ago",
+    Icon: CalendarCheck,
+    color: "text-blue-400",
+  },
+  {
+    text: "Diagnostics complete",
+    vehicle: "Ford Focus",
+    time: "8 min ago",
+    Icon: Gauge,
+    color: "text-violet-400",
+  },
+];
+
+function HomePage() {
+  const typedWord = useTypingEffect(
+    ["Service Booking", "Maintenance", "Inspections", "Repairs"],
+    90,
+    50,
+    1800,
+  );
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [liveIdx, setLiveIdx] = useState(0);
+
+  // Auto-rotate testimonials
   useEffect(() => {
-    document.body.style.overflow = mobileOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [mobileOpen]);
-
-  const scrollTo = useCallback((id) => {
-    setMobileOpen(false);
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    const t = setInterval(
+      () => setActiveTestimonial((p) => (p + 1) % testimonials.length),
+      5000,
+    );
+    return () => clearInterval(t);
   }, []);
 
-  const navLinks = [
-    { label: "Services", id: "services" },
-    { label: "Features", id: "features" },
-    { label: "About", href: "/learn-more" },
-  ];
+  // Cycle live activity
+  useEffect(() => {
+    const t = setInterval(
+      () => setLiveIdx((p) => (p + 1) % liveActivities.length),
+      3000,
+    );
+    return () => clearInterval(t);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* ══════════ NAVBAR ══════════ */}
-      <header
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
-          scrolled
-            ? "bg-white/90 backdrop-blur-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] border-b border-gray-200/60"
-            : "bg-transparent"
-        }`}
-      >
-        {/* Gradient accent line */}
-        <div className={`h-[2px] bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-500 transition-opacity duration-500 ${scrolled ? "opacity-100" : "opacity-0"}`} />
-
-        <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 lg:h-[68px]">
-          {/* ── Logo ── */}
-          <a href="/" className="flex items-center gap-2.5 group shrink-0">
-            <img
-              src="/favicon.svg"
-              alt="AutoServe"
-              className={`w-9 h-9 rounded-lg transition-all duration-300 group-hover:scale-105 ${
-                scrolled ? "shadow-sm" : "shadow-md shadow-white/10 ring-1 ring-white/20"
-              }`}
-            />
-            <div className="hidden sm:block">
-              <h1 className={`text-[17px] font-extrabold leading-none tracking-tight transition-colors duration-300 ${scrolled ? "text-gray-900" : "text-white"}`}>
-                AutoServe
-              </h1>
-              <p className={`text-[8px] font-bold tracking-[0.18em] uppercase mt-0.5 transition-colors duration-300 ${scrolled ? "text-blue-600" : "text-blue-300"}`}>
-                Vehicle Service Pro
-              </p>
-            </div>
-          </a>
-
-          {/* ── Center nav links (desktop) ── */}
-          <div className="hidden md:flex items-center">
-            <div className={`flex items-center gap-0.5 p-1 rounded-full transition-all duration-300 ${
-              scrolled ? "bg-gray-100/70" : "bg-white/[0.07] backdrop-blur-sm"
-            }`}>
-              {navLinks.map((link) => {
-                const active = link.id && activeSection === link.id;
-                return (
-                  <button
-                    key={link.label}
-                    onClick={() => link.id ? scrollTo(link.id) : (window.location.href = link.href)}
-                    className={`relative px-4 py-1.5 text-[13px] font-semibold rounded-full transition-all duration-300 ${
-                      active
-                        ? scrolled ? "bg-white text-blue-700 shadow-sm" : "bg-white/20 text-white"
-                        : scrolled ? "text-gray-500 hover:text-gray-900 hover:bg-white/60" : "text-gray-300 hover:text-white hover:bg-white/10"
-                    }`}
-                  >
-                    {link.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* ── Right side ── */}
-          <div className="flex items-center gap-2">
-            {/* Book Now CTA */}
-            {(!isAuthenticated || !isAdmin) && (
-              <button
-                onClick={() => (window.location.href = "/booking")}
-                className={`hidden md:flex items-center gap-1.5 px-4 py-2 text-[13px] font-bold rounded-full transition-all duration-300 hover:-translate-y-[1px] ${
-                  scrolled
-                    ? "bg-blue-600 text-white shadow-sm shadow-blue-600/20 hover:bg-blue-700 hover:shadow-md"
-                    : "bg-white/95 text-gray-900 shadow-md shadow-black/5 hover:bg-white"
-                }`}
-              >
-                <CalendarCheck className="w-3.5 h-3.5" />
-                Book Now
-              </button>
-            )}
-
-            {isAuthenticated ? (
-              /* ── User avatar dropdown ── */
-              <div className="relative">
-                <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className={`flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-full transition-all duration-300 ${
-                    scrolled ? "hover:bg-gray-100" : "hover:bg-white/10"
-                  } ${showUserMenu ? (scrolled ? "bg-gray-100" : "bg-white/10") : ""}`}
-                >
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow ring-2 ring-white/40">
-                    {user?.name?.charAt(0)?.toUpperCase() || "U"}
-                  </div>
-                  <span className={`text-[13px] font-semibold hidden sm:block transition-colors duration-300 ${scrolled ? "text-gray-700" : "text-white"}`}>
-                    {user?.name?.split(" ")[0]}
-                  </span>
-                  <ChevronDown className={`w-3 h-3 transition-all duration-300 ${scrolled ? "text-gray-400" : "text-gray-300"} ${showUserMenu ? "rotate-180" : ""}`} />
-                </button>
-
-                {/* Dropdown */}
-                <div className={`absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-xl shadow-black/8 border border-gray-200/80 overflow-hidden transition-all duration-200 origin-top-right ${
-                  showUserMenu ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
-                }`}>
-                  {/* User header */}
-                  <div className="px-4 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white font-bold text-sm border border-white/30">
-                        {user?.name?.charAt(0)?.toUpperCase() || "U"}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-white truncate">{user?.name}</p>
-                        <p className="text-[11px] text-blue-200 truncate">{user?.email}</p>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Items */}
-                  <div className="p-1.5">
-                    <button
-                      onClick={() => { setShowUserMenu(false); window.location.href = isAdmin ? "/admin" : "/dashboard"; }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition"
-                    >
-                      <LayoutDashboard className="w-4 h-4 text-blue-500" />
-                      {isAdmin ? "Admin Panel" : "My Dashboard"}
-                    </button>
-                    {!isAdmin && (
-                      <button
-                        onClick={() => { setShowUserMenu(false); window.location.href = "/booking"; }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium text-gray-700 hover:bg-violet-50 hover:text-violet-700 rounded-lg transition"
-                      >
-                        <CalendarCheck className="w-4 h-4 text-violet-500" />
-                        Book a Service
-                      </button>
-                    )}
-                  </div>
-                  <div className="border-t border-gray-100 p-1.5">
-                    <button
-                      onClick={() => { setShowUserMenu(false); logout(); window.location.href = "/"; }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium text-red-500 hover:bg-red-50 rounded-lg transition"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Sign Out
-                    </button>
-                  </div>
-                </div>
-                {showUserMenu && <div className="fixed inset-0 z-[-1]" onClick={() => setShowUserMenu(false)} />}
-              </div>
-            ) : (
-              /* ── Guest ── */
-              <div className="hidden md:flex items-center gap-2">
-                <button
-                  onClick={() => (window.location.href = "/signin")}
-                  className={`px-4 py-2 text-[13px] font-semibold rounded-full transition-all duration-300 ${
-                    scrolled ? "text-gray-600 hover:text-blue-600 hover:bg-blue-50" : "text-gray-200 hover:text-white hover:bg-white/10"
-                  }`}
-                >
-                  Login
-                </button>
-                <button
-                  onClick={() => (window.location.href = "/signup")}
-                  className={`px-5 py-2 text-[13px] font-bold rounded-full transition-all duration-300 hover:-translate-y-[1px] ${
-                    scrolled
-                      ? "bg-blue-600 text-white shadow-sm shadow-blue-600/20 hover:bg-blue-700"
-                      : "bg-white/95 text-gray-900 shadow-md shadow-black/5 hover:bg-white"
-                  }`}
-                >
-                  Get Started
-                </button>
-              </div>
-            )}
-
-            {/* Mobile toggle */}
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className={`md:hidden p-2 rounded-lg transition-colors duration-300 ${scrolled ? "text-gray-700 hover:bg-gray-100" : "text-white hover:bg-white/10"}`}
-            >
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-        </nav>
-
-        {/* ── Mobile menu ── */}
-        <div className={`md:hidden fixed inset-x-0 top-[calc(4rem+2px)] bottom-0 z-40 transition-all duration-300 ${mobileOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}>
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" onClick={() => setMobileOpen(false)} />
-          <div className={`relative mx-3 mt-1 bg-white rounded-2xl shadow-2xl border border-gray-200/80 overflow-hidden transition-all duration-300 ${mobileOpen ? "translate-y-0" : "-translate-y-3"}`}>
-            <div className="p-2 space-y-0.5">
-              {navLinks.map((link) => (
-                <button
-                  key={link.label}
-                  onClick={() => link.id ? scrollTo(link.id) : (window.location.href = link.href)}
-                  className={`w-full text-left px-4 py-3 text-sm font-semibold rounded-xl transition ${
-                    link.id && activeSection === link.id ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  {link.label}
-                </button>
-              ))}
-            </div>
-            <div className="border-t border-gray-100 p-3 space-y-2">
-              {isAuthenticated ? (
-                <>
-                  <div className="flex items-center gap-3 px-3 py-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                      {user?.name?.charAt(0)?.toUpperCase() || "U"}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-gray-900">{user?.name}</p>
-                      <p className="text-[11px] text-gray-400">{user?.email}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => { setMobileOpen(false); window.location.href = isAdmin ? "/admin" : "/dashboard"; }}
-                    className="w-full py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl shadow-sm flex items-center justify-center gap-2"
-                  >
-                    <LayoutDashboard className="w-4 h-4" /> {isAdmin ? "Admin Panel" : "Dashboard"}
-                  </button>
-                  <button
-                    onClick={() => { setMobileOpen(false); logout(); window.location.href = "/"; }}
-                    className="w-full py-2.5 text-red-500 text-sm font-semibold rounded-xl hover:bg-red-50 flex items-center justify-center gap-2"
-                  >
-                    <LogOut className="w-4 h-4" /> Sign Out
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => (window.location.href = "/signin")}
-                    className="w-full py-2.5 text-gray-700 text-sm font-semibold rounded-xl border border-gray-200 hover:bg-gray-50"
-                  >
-                    Login
-                  </button>
-                  <button
-                    onClick={() => (window.location.href = "/signup")}
-                    className="w-full py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl shadow-sm flex items-center justify-center gap-2"
-                  >
-                    Get Started <ArrowRight className="w-4 h-4" />
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section — pushed under the fixed navbar so hero bg shows through transparent nav */}
+      {/* ═══════════════ HERO SECTION ═══════════════ */}
       <section className="relative overflow-hidden -mt-[4.25rem] lg:-mt-[4.5rem] pt-[4.25rem] lg:pt-[4.5rem]">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900" />
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 right-20 w-96 h-96 bg-indigo-500 rounded-full blur-3xl" />
+        {/* Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-blue-950 to-gray-950" />
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-1/3 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-indigo-600/8 rounded-full blur-[100px]" />
         </div>
-        <div className="relative container mx-auto max-w-6xl px-4 py-24 md:py-32">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
+
+        <div className="relative container mx-auto max-w-6xl px-4 py-20 md:py-28">
+          <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+            {/* ── Left ── */}
             <div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-sm text-blue-200 mb-8">
-                <Sparkles className="w-4 h-4" />
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white/[0.07] border border-white/10 rounded-full text-sm text-blue-300 mb-6">
+                <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
                 <span>Trusted by 5,000+ vehicle owners</span>
               </div>
-              <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
+
+              <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-extrabold text-white mb-5 leading-[1.12] tracking-tight">
                 Smart Vehicle
                 <br />
                 <span className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
-                  Service Booking
+                  {typedWord}
                 </span>
-              </h2>
-              <p className="text-lg text-gray-300 mb-10 leading-relaxed max-w-lg">
-                Book your vehicle service appointments online in seconds. No
-                more phone calls, no more waiting. AutoServe connects you with
-                the best service centers instantly.
+                <span className="animate-blink text-blue-400">|</span>
+              </h1>
+
+              <p className="text-gray-400 text-base md:text-lg leading-relaxed mb-8 max-w-md">
+                Book service appointments in seconds. No calls, no waiting.
+                AutoServe connects you with certified service centers instantly.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
+
+              {/* Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 mb-10">
                 <button
                   onClick={() => (window.location.href = "/booking")}
-                  className="group px-8 py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 flex items-center justify-center gap-2"
+                  className="group px-7 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm rounded-xl transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 flex items-center justify-center gap-2"
                 >
-                  Book Now
+                  Book a Service
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button
                   onClick={() => (window.location.href = "/learn-more")}
-                  className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-xl border border-white/20 hover:bg-white/20 transition"
+                  className="px-7 py-3.5 bg-white/[0.07] hover:bg-white/[0.12] text-white font-semibold text-sm rounded-xl border border-white/10 transition-all"
                 >
                   Learn More
                 </button>
               </div>
+
+              {/* Trust row */}
+              <div className="flex flex-wrap items-center gap-5 text-sm text-gray-400">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <span>Certified Centers</span>
+                </div>
+                <div className="w-px h-4 bg-white/10 hidden sm:block" />
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-amber-400" />
+                  <span>Fast Turnaround</span>
+                </div>
+                <div className="w-px h-4 bg-white/10 hidden sm:block" />
+                <div className="flex items-center gap-1.5">
+                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                  <span>4.9 Rating</span>
+                </div>
+              </div>
             </div>
-            <div className="hidden md:flex justify-center">
+
+            {/* ── Right — Live Service Preview ── */}
+            <div className="hidden md:block">
               <div className="relative">
-                <div className="w-72 h-72 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-3xl backdrop-blur-sm border border-white/10 flex items-center justify-center shadow-2xl">
-                  <div className="w-56 h-56 bg-gradient-to-br from-blue-600/30 to-blue-800/30 rounded-2xl border border-white/10 flex items-center justify-center">
-                    <Car className="w-24 h-24 text-white/80" />
+                {/* Main card */}
+                <div className="bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl">
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                        <Activity className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold text-sm">
+                          Live Activity
+                        </p>
+                        <p className="text-gray-500 text-xs">
+                          Real-time updates
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                      <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                      <span className="text-emerald-400 text-[11px] font-medium">
+                        Live
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Quick stats */}
+                  <div className="grid grid-cols-3 gap-2.5 mb-5">
+                    {[
+                      {
+                        label: "Active",
+                        val: "24",
+                        color: "text-blue-400",
+                        bg: "bg-blue-500/10",
+                      },
+                      {
+                        label: "In Progress",
+                        val: "8",
+                        color: "text-amber-400",
+                        bg: "bg-amber-500/10",
+                      },
+                      {
+                        label: "Done Today",
+                        val: "47",
+                        color: "text-emerald-400",
+                        bg: "bg-emerald-500/10",
+                      },
+                    ].map((s) => (
+                      <div
+                        key={s.label}
+                        className={`${s.bg} rounded-xl p-3 text-center`}
+                      >
+                        <p className={`text-lg font-bold ${s.color}`}>
+                          {s.val}
+                        </p>
+                        <p className="text-gray-500 text-[10px] mt-0.5">
+                          {s.label}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Live feed — cycling */}
+                  <div className="space-y-2">
+                    {liveActivities.map((item, idx) => {
+                      const isActive = idx === liveIdx;
+                      return (
+                        <div
+                          key={idx}
+                          className={`flex items-center gap-3 rounded-xl p-2.5 transition-all duration-500 ${
+                            isActive
+                              ? "bg-white/[0.07] border border-white/10"
+                              : "opacity-40"
+                          }`}
+                        >
+                          <div
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                              isActive ? "bg-white/[0.1]" : "bg-transparent"
+                            }`}
+                          >
+                            <item.Icon className={`w-4 h-4 ${item.color}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-xs font-medium truncate">
+                              {item.text}
+                            </p>
+                            <p className="text-gray-500 text-[10px]">
+                              {item.vehicle}
+                            </p>
+                          </div>
+                          <span className="text-gray-600 text-[10px] whitespace-nowrap">
+                            {item.time}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-                {/* Floating badges */}
-                <div className="absolute -top-4 -right-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-3 shadow-xl">
+
+                {/* Floating badge */}
+                <div className="absolute -top-3 -right-3 bg-white/[0.08] backdrop-blur-xl border border-white/15 rounded-xl px-3.5 py-2 shadow-lg animate-float">
                   <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                    <span className="text-white text-sm font-medium">
-                      Certified
-                    </span>
-                  </div>
-                </div>
-                <div className="absolute -bottom-4 -left-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-3 shadow-xl">
-                  <div className="flex items-center gap-2">
-                    <CalendarCheck className="w-5 h-5 text-blue-400" />
-                    <span className="text-white text-sm font-medium">
-                      Instant Book
+                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-white text-xs font-medium">
+                      98% Satisfaction
                     </span>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ HOW IT WORKS ═══════════════ */}
+      <section className="py-14 px-4 bg-gray-50 border-b border-gray-100">
+        <div className="container mx-auto max-w-4xl">
+          <p className="text-center text-xs font-semibold text-blue-600 uppercase tracking-wider mb-8">
+            How It Works
+          </p>
+          <div className="grid md:grid-cols-3 gap-8">
+            {howItWorks.map((item, idx) => (
+              <div
+                key={item.step}
+                className="relative flex flex-col items-center text-center"
+              >
+                {idx < howItWorks.length - 1 && (
+                  <div className="hidden md:block absolute top-5 left-[60%] right-[-40%] h-[2px] bg-gradient-to-r from-blue-200 to-transparent" />
+                )}
+                <div className="relative w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3 z-10">
+                  <item.Icon className="w-5 h-5 text-blue-600" />
+                  <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
+                    {item.step}
+                  </div>
+                </div>
+                <h4 className="text-sm font-bold text-gray-900 mb-1">
+                  {item.title}
+                </h4>
+                <p className="text-xs text-gray-500 leading-relaxed max-w-[200px]">
+                  {item.desc}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -710,54 +796,158 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Stats Section — Animated Counters */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900" />
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-20 w-64 h-64 bg-blue-400 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 right-10 w-72 h-72 bg-indigo-400 rounded-full blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950" />
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-20 w-64 h-64 bg-blue-500/15 rounded-full blur-[100px]" />
+          <div className="absolute bottom-10 right-10 w-72 h-72 bg-indigo-500/10 rounded-full blur-[100px]" />
         </div>
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, white 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
+          }}
+        />
         <div className="relative container mx-auto max-w-5xl px-4 py-20">
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-blue-400 tracking-wider uppercase mb-2">
+              Our Impact
+            </p>
+            <h3 className="text-2xl md:text-3xl font-bold text-white">
+              Numbers That Speak
+            </h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat) => (
-              <div key={stat.label} className="text-center group">
-                <div className="w-14 h-14 mx-auto mb-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <stat.Icon className="w-7 h-7 text-blue-300" />
-                </div>
-                <div className="text-3xl font-bold text-white mb-1">
-                  {stat.value}
-                </div>
-                <p className="text-sm text-gray-400">{stat.label}</p>
-              </div>
+              <AnimatedStat
+                key={stat.label}
+                Icon={stat.Icon}
+                value={stat.value}
+                label={stat.label}
+              />
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 px-4 bg-white">
-        <div className="container mx-auto max-w-3xl text-center">
-          <p className="text-sm font-semibold text-blue-600 tracking-wider uppercase mb-3">
-            Get Started
-          </p>
-          <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+      {/* ═══════════════ TESTIMONIALS ═══════════════ */}
+      <section className="py-20 px-4 bg-white">
+        <div className="container mx-auto max-w-4xl">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-blue-600 tracking-wider uppercase mb-3">
+              Testimonials
+            </p>
+            <h3 className="text-2xl md:text-3xl font-bold text-gray-900">
+              What Our Customers Say
+            </h3>
+          </div>
+          <div className="relative">
+            <div className="bg-gray-50 rounded-2xl p-8 md:p-10 border border-gray-100">
+              <Quote className="w-8 h-8 text-blue-200 mb-4" />
+              <p className="text-gray-700 text-base md:text-lg leading-relaxed mb-6 min-h-[60px] transition-all duration-500">
+                {testimonials[activeTestimonial].text}
+              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-900 font-semibold text-sm">
+                    {testimonials[activeTestimonial].name}
+                  </p>
+                  <p className="text-gray-500 text-xs">
+                    {testimonials[activeTestimonial].role}
+                  </p>
+                </div>
+                <div className="flex gap-0.5">
+                  {[...Array(testimonials[activeTestimonial].rating)].map(
+                    (_, i) => (
+                      <Star
+                        key={i}
+                        className="w-4 h-4 text-amber-400 fill-amber-400"
+                      />
+                    ),
+                  )}
+                </div>
+              </div>
+            </div>
+            {/* Dots + arrows */}
+            <div className="flex items-center justify-center gap-4 mt-6">
+              <button
+                onClick={() =>
+                  setActiveTestimonial(
+                    (p) => (p - 1 + testimonials.length) % testimonials.length,
+                  )
+                }
+                className="w-8 h-8 rounded-full border border-gray-200 hover:border-gray-400 flex items-center justify-center transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4 text-gray-500" />
+              </button>
+              <div className="flex gap-2">
+                {testimonials.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveTestimonial(i)}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      i === activeTestimonial
+                        ? "bg-blue-600 w-6"
+                        : "bg-gray-300 hover:bg-gray-400"
+                    }`}
+                  />
+                ))}
+              </div>
+              <button
+                onClick={() =>
+                  setActiveTestimonial((p) => (p + 1) % testimonials.length)
+                }
+                className="w-8 h-8 rounded-full border border-gray-200 hover:border-gray-400 flex items-center justify-center transition-colors"
+              >
+                <ChevronRight className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ CTA SECTION ═══════════════ */}
+      <section className="py-20 px-4 bg-gradient-to-br from-blue-600 to-indigo-700 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white/5 rounded-full blur-[100px]" />
+          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-400/10 rounded-full blur-[80px]" />
+        </div>
+        <div className="relative container mx-auto max-w-3xl text-center">
+          <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Ready to Book Your Service?
           </h3>
-          <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto">
-            Join thousands of satisfied customers who have simplified their
-            vehicle maintenance with AutoServe.
+          <p className="text-blue-100 text-base mb-8 max-w-lg mx-auto">
+            Join thousands of satisfied customers. Book in under 60 seconds.
           </p>
-          <div className="flex gap-4 justify-center flex-wrap">
+          <div className="flex flex-wrap gap-6 justify-center mb-10">
+            {[
+              { Icon: Zap, text: "Instant Confirmation" },
+              { Icon: ShieldCheck, text: "Certified Mechanics" },
+              { Icon: Timer, text: "2-Hour Avg. Service" },
+            ].map((item) => (
+              <div
+                key={item.text}
+                className="flex items-center gap-2 text-white/80 text-sm"
+              >
+                <item.Icon className="w-4 h-4" />
+                <span>{item.text}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-3 justify-center flex-wrap">
             <button
               onClick={() => (window.location.href = "/booking")}
-              className="group px-10 py-4 bg-blue-600 text-white font-semibold text-base rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 flex items-center gap-2"
+              className="group px-8 py-4 bg-white text-blue-700 font-bold text-sm rounded-xl hover:bg-blue-50 transition-all shadow-lg shadow-black/10 flex items-center gap-2"
             >
               Get Started Now
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
             <button
               onClick={() => (window.location.href = "/learn-more")}
-              className="px-10 py-4 text-blue-600 font-semibold text-base rounded-xl border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 transition"
+              className="px-8 py-4 text-white font-semibold text-sm rounded-xl border-2 border-white/30 hover:border-white/60 hover:bg-white/10 transition-all"
             >
               Learn More
             </button>
@@ -770,11 +960,10 @@ function HomePage() {
         <div className="container mx-auto max-w-5xl">
           <div className="grid md:grid-cols-4 gap-8 mb-10">
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Car className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-white font-bold text-lg">AutoServe</span>
+              <div className="mb-4">
+                <span className="text-xl font-extrabold text-white">
+                  Auto<span className="text-blue-400">Serve</span>
+                </span>
               </div>
               <p className="text-sm leading-relaxed">
                 Smart vehicle service booking platform built for modern vehicle

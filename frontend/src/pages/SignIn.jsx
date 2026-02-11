@@ -96,18 +96,10 @@ function SignIn() {
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-500 rounded-full blur-3xl" />
         </div>
         <div className="relative z-10 flex flex-col justify-center px-16">
-          <a href="/" className="flex items-center gap-3 mb-12">
-            <img
-              src="/favicon.svg"
-              alt="AutoServe"
-              className="w-12 h-12 rounded-xl border border-white/20"
-            />
-            <div>
-              <h1 className="text-2xl font-bold text-white">AutoServe</h1>
-              <p className="text-[10px] text-blue-300 font-semibold tracking-wider uppercase">
-                Vehicle Service Pro
-              </p>
-            </div>
+          <a href="/" className="inline-block mb-12">
+            <h1 className="text-3xl font-extrabold text-white">
+              Auto<span className="text-blue-400">Serve</span>
+            </h1>
           </a>
           <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
             Welcome back to
@@ -128,13 +120,10 @@ function SignIn() {
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="flex justify-center mb-8 lg:hidden">
-            <a href="/" className="flex items-center gap-3">
-              <img
-                src="/favicon.svg"
-                alt="AutoServe"
-                className="w-11 h-11 rounded-xl shadow-md"
-              />
-              <span className="text-xl font-bold text-gray-800">AutoServe</span>
+            <a href="/">
+              <span className="text-2xl font-extrabold text-gray-900">
+                Auto<span className="text-blue-600">Serve</span>
+              </span>
             </a>
           </div>
 
@@ -157,7 +146,7 @@ function SignIn() {
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                 <input
                   type="email"
                   name="email"
@@ -185,7 +174,7 @@ function SignIn() {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                 <input
                   type="password"
                   name="password"

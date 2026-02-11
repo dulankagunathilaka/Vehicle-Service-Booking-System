@@ -327,67 +327,6 @@ function FAQItem({ question, answer, index }) {
 function LearnMore() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
-        <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3 group">
-            <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition">
-              <Car className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-800 leading-tight">
-                AutoServe
-              </h1>
-              <p className="text-[10px] text-blue-600 font-semibold tracking-wider uppercase">
-                Vehicle Service Pro
-              </p>
-            </div>
-          </a>
-
-          <div className="hidden md:flex gap-8 items-center">
-            <a
-              href="#how-it-works"
-              className="text-sm text-gray-500 hover:text-blue-600 font-medium transition"
-            >
-              How It Works
-            </a>
-            <a
-              href="#services"
-              className="text-sm text-gray-500 hover:text-blue-600 font-medium transition"
-            >
-              Services
-            </a>
-            <a
-              href="#testimonials"
-              className="text-sm text-gray-500 hover:text-blue-600 font-medium transition"
-            >
-              Testimonials
-            </a>
-            <a
-              href="#faq"
-              className="text-sm text-gray-500 hover:text-blue-600 font-medium transition"
-            >
-              FAQ
-            </a>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => (window.location.href = "/signin")}
-              className="px-4 py-2 text-sm text-gray-600 font-semibold hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
-            >
-              Login
-            </button>
-            <button
-              onClick={() => (window.location.href = "/signup")}
-              className="px-5 py-2 text-sm bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition shadow-sm hover:shadow-md"
-            >
-              Sign Up
-            </button>
-          </div>
-        </nav>
-      </header>
-
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900" />
@@ -684,11 +623,10 @@ function LearnMore() {
         <div className="container mx-auto max-w-5xl">
           <div className="grid md:grid-cols-4 gap-8 mb-10">
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Car className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-white font-bold text-lg">AutoServe</span>
+              <div className="mb-4">
+                <span className="text-xl font-extrabold text-white">
+                  Auto<span className="text-blue-400">Serve</span>
+                </span>
               </div>
               <p className="text-sm leading-relaxed">
                 Smart vehicle service booking platform built for modern vehicle
