@@ -20,6 +20,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/services', require('./routes/services'));
 app.use('/api/bookings', require('./routes/bookings'));
+app.use('/api/reviews', require('./routes/reviews'));
+app.use('/api/billing', require('./routes/billing'));
+app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/inventory', require('./routes/inventory'));
 app.use('/api/admin', require('./routes/admin'));
 
 // Health check

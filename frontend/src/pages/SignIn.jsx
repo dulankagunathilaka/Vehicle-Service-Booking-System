@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car, Mail, Lock, ArrowRight, AlertCircle, Info } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 function SignIn() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -69,8 +71,7 @@ function SignIn() {
       const data = await response.json();
 
       if (data.success) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        login(data.token, data.user);
         if (rememberMe) {
           localStorage.setItem("rememberMe", "true");
         }
@@ -96,9 +97,11 @@ function SignIn() {
         </div>
         <div className="relative z-10 flex flex-col justify-center px-16">
           <a href="/" className="flex items-center gap-3 mb-12">
-            <div className="w-12 h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl flex items-center justify-center">
-              <Car className="w-7 h-7 text-white" />
-            </div>
+            <img
+              src="/favicon.svg"
+              alt="AutoServe"
+              className="w-12 h-12 rounded-xl border border-white/20"
+            />
             <div>
               <h1 className="text-2xl font-bold text-white">AutoServe</h1>
               <p className="text-[10px] text-blue-300 font-semibold tracking-wider uppercase">
@@ -126,9 +129,11 @@ function SignIn() {
           {/* Mobile Logo */}
           <div className="flex justify-center mb-8 lg:hidden">
             <a href="/" className="flex items-center gap-3">
-              <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md">
-                <Car className="w-6 h-6 text-white" />
-              </div>
+              <img
+                src="/favicon.svg"
+                alt="AutoServe"
+                className="w-11 h-11 rounded-xl shadow-md"
+              />
               <span className="text-xl font-bold text-gray-800">AutoServe</span>
             </a>
           </div>

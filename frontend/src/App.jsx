@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -19,7 +20,14 @@ import {
   MapPin,
   ClipboardCheck,
   Headphones,
+  ChevronDown,
+  Menu,
+  X,
+  LayoutDashboard,
+  LogOut,
+  Phone,
 } from "lucide-react";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import BookingPage from "./pages/Booking";
@@ -30,60 +38,146 @@ import AdminOverview from "./pages/admin/AdminOverview";
 import AdminBookings from "./pages/admin/AdminBookings";
 import AdminServices from "./pages/admin/AdminServices";
 import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminReviews from "./pages/admin/AdminReviews";
+import AdminBilling from "./pages/admin/AdminBilling";
+import AdminNotifications from "./pages/admin/AdminNotifications";
+import AdminInventory from "./pages/admin/AdminInventory";
 
+// Redirect logged-in users away from signin/signup
+function GuestRoute({ children }) {
+  const { isAuthenticated, isAdmin, loading } = useAuth();
+  if (loading) return null;
+  if (isAuthenticated)
+    return <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace />;
+  return children;
+}
+
+// Protect customer routes
+function CustomerGuard({ children }) {
+  const { isAuthenticated, isCustomer, loading } = useAuth();
+  if (loading) return null;
+  if (!isAuthenticated) return <Navigate to="/signin" replace />;
+  if (!isCustomer) return <Navigate to="/admin" replace />;
+  return children;
+}
+
+// Protect admin routes
 function AdminGuard({ children }) {
-  const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  if (!token || user.role !== "admin") return <Navigate to="/signin" replace />;
+  const { isAuthenticated, isAdmin, loading } = useAuth();
+  if (loading) return null;
+  if (!isAuthenticated) return <Navigate to="/signin" replace />;
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
   return <AdminLayout>{children}</AdminLayout>;
 }
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-white">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/learn-more" element={<LearnMore />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/booking" element={<BookingPage />} />
-          <Route path="/dashboard" element={<CustomerDashboard />} />
-          <Route
-            path="/admin"
-            element={
-              <AdminGuard>
-                <AdminOverview />
-              </AdminGuard>
-            }
-          />
-          <Route
-            path="/admin/bookings"
-            element={
-              <AdminGuard>
-                <AdminBookings />
-              </AdminGuard>
-            }
-          />
-          <Route
-            path="/admin/services"
-            element={
-              <AdminGuard>
-                <AdminServices />
-              </AdminGuard>
-            }
-          />
-          <Route
-            path="/admin/customers"
-            element={
-              <AdminGuard>
-                <AdminCustomers />
-              </AdminGuard>
-            }
-          />
-        </Routes>
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="min-h-screen bg-white">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/learn-more" element={<LearnMore />} />
+            <Route
+              path="/signup"
+              element={
+                <GuestRoute>
+                  <SignUp />
+                </GuestRoute>
+              }
+            />
+            <Route
+              path="/signin"
+              element={
+                <GuestRoute>
+                  <SignIn />
+                </GuestRoute>
+              }
+            />
+            <Route
+              path="/booking"
+              element={
+                <CustomerGuard>
+                  <BookingPage />
+                </CustomerGuard>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <CustomerGuard>
+                  <CustomerDashboard />
+                </CustomerGuard>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <AdminGuard>
+                  <AdminOverview />
+                </AdminGuard>
+              }
+            />
+            <Route
+              path="/admin/bookings"
+              element={
+                <AdminGuard>
+                  <AdminBookings />
+                </AdminGuard>
+              }
+            />
+            <Route
+              path="/admin/services"
+              element={
+                <AdminGuard>
+                  <AdminServices />
+                </AdminGuard>
+              }
+            />
+            <Route
+              path="/admin/customers"
+              element={
+                <AdminGuard>
+                  <AdminCustomers />
+                </AdminGuard>
+              }
+            />
+            <Route
+              path="/admin/reviews"
+              element={
+                <AdminGuard>
+                  <AdminReviews />
+                </AdminGuard>
+              }
+            />
+            <Route
+              path="/admin/billing"
+              element={
+                <AdminGuard>
+                  <AdminBilling />
+                </AdminGuard>
+              }
+            />
+            <Route
+              path="/admin/notifications"
+              element={
+                <AdminGuard>
+                  <AdminNotifications />
+                </AdminGuard>
+              }
+            />
+            <Route
+              path="/admin/inventory"
+              element={
+                <AdminGuard>
+                  <AdminInventory />
+                </AdminGuard>
+              }
+            />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
@@ -179,62 +273,456 @@ const stats = [
 ];
 
 function HomePage() {
+  const { isAuthenticated, isAdmin, user, logout } = useAuth();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
+
+  // Scroll-aware navbar
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+
+      // Detect active section
+      const sections = ["features", "services"];
+      let current = "";
+      for (const id of sections) {
+        const el = document.getElementById(id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= 120 && rect.bottom > 120) {
+            current = id;
+          }
+        }
+      }
+      setActiveSection(current);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Close menus on Escape
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") {
+        setShowUserMenu(false);
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
+
+  // Lock body scroll when mobile menu open
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
+  const smoothScroll = useCallback((id) => {
+    setMobileMenuOpen(false);
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, []);
+
+  const navLinks = [
+    { label: "Services", href: "services" },
+    { label: "Features", href: "features" },
+    { label: "About", href: "/learn-more", isPage: true },
+    { label: "Contact", href: "footer", scrollTo: true },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
-        <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3 group">
-            <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition">
-              <Car className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-800 leading-tight">
-                AutoServe
-              </h1>
-              <p className="text-[10px] text-blue-600 font-semibold tracking-wider uppercase">
-                Vehicle Service Pro
-              </p>
-            </div>
-          </a>
+      {/* ═══════════════════ ADVANCED NAVBAR ═══════════════════ */}
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+          scrolled
+            ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-black/[0.04] border-b border-gray-100/80"
+            : "bg-transparent"
+        }`}
+      >
+        {/* Top accent bar */}
+        <div
+          className={`h-0.5 bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-500 transition-opacity duration-500 ${
+            scrolled ? "opacity-100" : "opacity-0"
+          }`}
+        />
 
-          <div className="hidden md:flex gap-8 items-center">
-            <a
-              href="#services"
-              className="text-sm text-gray-500 hover:text-blue-600 font-medium transition"
-            >
-              Services
+        <nav className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 md:h-[72px]">
+            {/* Logo */}
+            <a href="/" className="flex items-center gap-3 group relative z-10">
+              <div className="relative">
+                <img
+                  src="/favicon.svg"
+                  alt="AutoServe"
+                  className={`w-10 h-10 rounded-xl transition-all duration-300 ${
+                    scrolled
+                      ? "shadow-md"
+                      : "shadow-lg shadow-white/20 ring-1 ring-white/20"
+                  } group-hover:scale-105`}
+                />
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <div>
+                <h1
+                  className={`text-lg font-extrabold leading-tight tracking-tight transition-colors duration-300 ${
+                    scrolled ? "text-gray-900" : "text-white"
+                  }`}
+                >
+                  AutoServe
+                </h1>
+                <p
+                  className={`text-[9px] font-bold tracking-[0.2em] uppercase transition-colors duration-300 ${
+                    scrolled ? "text-blue-600" : "text-blue-300"
+                  }`}
+                >
+                  Vehicle Service Pro
+                </p>
+              </div>
             </a>
-            <a
-              href="#features"
-              className="text-sm text-gray-500 hover:text-blue-600 font-medium transition"
-            >
-              Features
-            </a>
-            <a
-              href="/learn-more"
-              className="text-sm text-gray-500 hover:text-blue-600 font-medium transition"
-            >
-              About
-            </a>
-          </div>
 
-          <div className="flex gap-3">
-            <button
-              onClick={() => (window.location.href = "/signin")}
-              className="px-4 py-2 text-sm text-gray-600 font-semibold hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
-            >
-              Login
-            </button>
-            <button
-              onClick={() => (window.location.href = "/signup")}
-              className="px-5 py-2 text-sm bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition shadow-sm hover:shadow-md"
-            >
-              Sign Up
-            </button>
+            {/* Desktop Nav Links */}
+            <div className="hidden md:flex items-center">
+              <div
+                className={`flex items-center gap-1 px-2 py-1.5 rounded-2xl transition-all duration-300 ${
+                  scrolled
+                    ? "bg-gray-50/80"
+                    : "bg-white/[0.08] backdrop-blur-sm"
+                }`}
+              >
+                {navLinks.map((link) => {
+                  const isActive = !link.isPage && activeSection === link.href;
+                  return (
+                    <button
+                      key={link.label}
+                      onClick={() => {
+                        if (link.isPage) {
+                          window.location.href = link.href;
+                        } else {
+                          smoothScroll(link.href);
+                        }
+                      }}
+                      className={`relative px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300 ${
+                        isActive
+                          ? scrolled
+                            ? "text-blue-700 bg-blue-50"
+                            : "text-white bg-white/20"
+                          : scrolled
+                            ? "text-gray-500 hover:text-gray-900 hover:bg-gray-100/80"
+                            : "text-gray-300 hover:text-white hover:bg-white/10"
+                      }`}
+                    >
+                      {link.label}
+                      {isActive && (
+                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-blue-500 rounded-full" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Right Side — CTA + User */}
+            <div className="flex items-center gap-2 sm:gap-3 relative z-10">
+              {/* Book Now CTA — always visible on desktop */}
+              {(!isAuthenticated || !isAdmin) && (
+                <button
+                  onClick={() => (window.location.href = "/booking")}
+                  className={`hidden md:inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-xl transition-all duration-300 ${
+                    scrolled
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5"
+                      : "bg-white text-gray-900 shadow-lg shadow-black/10 hover:bg-blue-50 hover:-translate-y-0.5"
+                  }`}
+                >
+                  <CalendarCheck className="w-4 h-4" />
+                  Book Now
+                </button>
+              )}
+
+              {isAuthenticated ? (
+                /* ── User Avatar Menu ── */
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded-xl transition-all duration-300 group ${
+                      scrolled ? "hover:bg-gray-50" : "hover:bg-white/10"
+                    } ${showUserMenu ? (scrolled ? "bg-gray-50" : "bg-white/10") : ""}`}
+                  >
+                    <div className="relative">
+                      <div className="w-9 h-9 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-md ring-2 ring-white/50 group-hover:ring-blue-300/50 transition-all">
+                        {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                      </div>
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white" />
+                    </div>
+                    <span
+                      className={`text-sm font-semibold hidden sm:inline transition-colors duration-300 ${
+                        scrolled ? "text-gray-700" : "text-white"
+                      }`}
+                    >
+                      {user?.name?.split(" ")[0]}
+                    </span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 transition-all duration-300 ${
+                        scrolled ? "text-gray-400" : "text-gray-300"
+                      } ${showUserMenu ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {/* User Dropdown */}
+                  <div
+                    className={`absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-2xl shadow-black/10 border border-gray-100 overflow-hidden transition-all duration-200 origin-top-right ${
+                      showUserMenu
+                        ? "opacity-100 scale-100 translate-y-0"
+                        : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+                    }`}
+                  >
+                    {/* Profile header */}
+                    <div className="p-4 bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-lg font-bold border border-white/30">
+                          {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold truncate">
+                            {user?.name}
+                          </p>
+                          <p className="text-xs text-blue-100 truncate">
+                            {user?.email}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3 px-2.5 py-1 bg-white/15 rounded-lg inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider">
+                        <ShieldCheck className="w-3 h-3" />
+                        {isAdmin ? "Administrator" : "Customer"}
+                      </div>
+                    </div>
+
+                    {/* Menu items */}
+                    <div className="p-2">
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          window.location.href = isAdmin
+                            ? "/admin"
+                            : "/dashboard";
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-all group"
+                      >
+                        <div className="w-8 h-8 bg-blue-50 group-hover:bg-blue-100 rounded-lg flex items-center justify-center transition-colors">
+                          <LayoutDashboard className="w-4 h-4 text-blue-500" />
+                        </div>
+                        {isAdmin ? "Admin Panel" : "My Dashboard"}
+                      </button>
+                      {!isAdmin && (
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false);
+                            window.location.href = "/booking";
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 rounded-xl transition-all group"
+                        >
+                          <div className="w-8 h-8 bg-violet-50 group-hover:bg-violet-100 rounded-lg flex items-center justify-center transition-colors">
+                            <CalendarCheck className="w-4 h-4 text-violet-500" />
+                          </div>
+                          Book a Service
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="p-2 pt-0">
+                      <div className="border-t border-gray-100 pt-2">
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false);
+                            logout();
+                            window.location.href = "/";
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-all group"
+                        >
+                          <div className="w-8 h-8 bg-red-50 group-hover:bg-red-100 rounded-lg flex items-center justify-center transition-colors">
+                            <LogOut className="w-4 h-4 text-red-400" />
+                          </div>
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Backdrop to close menu */}
+                  {showUserMenu && (
+                    <div
+                      className="fixed inset-0 z-[-1]"
+                      onClick={() => setShowUserMenu(false)}
+                    />
+                  )}
+                </div>
+              ) : (
+                /* ── Guest buttons ── */
+                <>
+                  <button
+                    onClick={() => (window.location.href = "/signin")}
+                    className={`hidden md:inline-flex px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ${
+                      scrolled
+                        ? "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                        : "text-gray-200 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => (window.location.href = "/signup")}
+                    className={`hidden md:inline-flex px-5 py-2.5 text-sm font-bold rounded-xl transition-all duration-300 ${
+                      scrolled
+                        ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5"
+                        : "bg-white text-gray-900 shadow-lg shadow-black/10 hover:bg-blue-50 hover:-translate-y-0.5"
+                    }`}
+                  >
+                    Get Started
+                  </button>
+                </>
+              )}
+
+              {/* Mobile hamburger */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className={`md:hidden p-2 rounded-xl transition-all duration-300 ${
+                  scrolled
+                    ? "text-gray-600 hover:bg-gray-100"
+                    : "text-white hover:bg-white/10"
+                }`}
+              >
+                {mobileMenuOpen ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <Menu className="w-5 h-5" />
+                )}
+              </button>
+            </div>
           </div>
         </nav>
+
+        {/* ═══════════════════ MOBILE MENU ═══════════════════ */}
+        <div
+          className={`md:hidden fixed inset-0 top-[calc(4rem+2px)] z-40 transition-all duration-300 ${
+            mobileMenuOpen
+              ? "opacity-100 pointer-events-auto"
+              : "opacity-0 pointer-events-none"
+          }`}
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+
+          {/* Menu panel */}
+          <div
+            className={`relative bg-white m-3 rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transition-all duration-300 ${
+              mobileMenuOpen
+                ? "translate-y-0 opacity-100"
+                : "-translate-y-4 opacity-0"
+            }`}
+          >
+            {/* Nav links */}
+            <div className="p-3 space-y-1">
+              {navLinks.map((link) => (
+                <button
+                  key={link.label}
+                  onClick={() => {
+                    if (link.isPage) {
+                      window.location.href = link.href;
+                    } else {
+                      smoothScroll(link.href);
+                    }
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-xl transition-all ${
+                    activeSection === link.href
+                      ? "bg-blue-50 text-blue-700"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {link.label}
+                  {activeSection === link.href && (
+                    <span className="ml-auto w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Mobile user section */}
+            <div className="p-3 pt-0">
+              <div className="border-t border-gray-100 pt-3 space-y-2">
+                {isAuthenticated ? (
+                  <>
+                    <div className="flex items-center gap-3 px-4 py-2">
+                      <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                        {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">
+                          {user?.name}
+                        </p>
+                        <p className="text-[11px] text-gray-400">
+                          {user?.email}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        window.location.href = isAdmin
+                          ? "/admin"
+                          : "/dashboard";
+                      }}
+                      className="w-full px-4 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-600/20 flex items-center justify-center gap-2"
+                    >
+                      <LayoutDashboard className="w-4 h-4" />
+                      {isAdmin ? "Admin Panel" : "My Dashboard"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        logout();
+                        window.location.href = "/";
+                      }}
+                      className="w-full px-4 py-2.5 text-red-500 text-sm font-semibold rounded-xl hover:bg-red-50 transition-all flex items-center justify-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => (window.location.href = "/signin")}
+                      className="w-full px-4 py-3 text-gray-700 text-sm font-semibold rounded-xl border border-gray-200 hover:bg-gray-50 transition-all"
+                    >
+                      Login
+                    </button>
+                    <button
+                      onClick={() => (window.location.href = "/signup")}
+                      className="w-full px-4 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-600/20 flex items-center justify-center gap-2"
+                    >
+                      Get Started
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </header>
+
+      {/* Spacer for fixed navbar */}
+      <div className="h-16 md:h-[72px]" />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">

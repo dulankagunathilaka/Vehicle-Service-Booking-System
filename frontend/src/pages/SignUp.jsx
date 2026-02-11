@@ -10,9 +10,11 @@ import {
   AlertCircle,
   CheckCircle2,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 function SignUp() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -100,7 +102,7 @@ function SignUp() {
 
       if (data.success) {
         setSuccess(true);
-        localStorage.setItem("token", data.token);
+        login(data.token, data.user);
         setTimeout(() => {
           navigate("/dashboard");
         }, 2000);
@@ -161,9 +163,11 @@ function SignUp() {
         </div>
         <div className="relative z-10 flex flex-col justify-center px-16">
           <a href="/" className="flex items-center gap-3 mb-12">
-            <div className="w-12 h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl flex items-center justify-center">
-              <Car className="w-7 h-7 text-white" />
-            </div>
+            <img
+              src="/favicon.svg"
+              alt="AutoServe"
+              className="w-12 h-12 rounded-xl border border-white/20"
+            />
             <div>
               <h1 className="text-2xl font-bold text-white">AutoServe</h1>
               <p className="text-[10px] text-blue-300 font-semibold tracking-wider uppercase">
@@ -203,9 +207,11 @@ function SignUp() {
           {/* Mobile Logo */}
           <div className="flex justify-center mb-8 lg:hidden">
             <a href="/" className="flex items-center gap-3">
-              <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md">
-                <Car className="w-6 h-6 text-white" />
-              </div>
+              <img
+                src="/favicon.svg"
+                alt="AutoServe"
+                className="w-11 h-11 rounded-xl shadow-md"
+              />
               <span className="text-xl font-bold text-gray-800">AutoServe</span>
             </a>
           </div>

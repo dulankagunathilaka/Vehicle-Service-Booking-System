@@ -1,6 +1,8 @@
 const express = require('express');
 const Booking = require('../models/Booking');
+const Invoice = require('../models/Invoice');
 const { protect, authorize } = require('../middleware/authMiddleware');
+const { sendNotification, templates } = require('../services/notificationService');
 
 const router = express.Router();
 
@@ -24,6 +26,19 @@ router.post('/', protect, authorize('customer'), async (req, res) => {
       success: true,
       data: booking,
     });
+
+    // Send booking confirmation notification
+    try {
+      const tmpl = templates.bookingConfirmation(booking, req.body.serviceName || 'Vehicle Service');
+      await sendNotification({
+        recipientId: req.user.id,
+        type: 'both',
+        ...tmpl,
+        relatedBooking: booking._id,
+      });
+    } catch (notifErr) {
+      console.error('Notification error:', notifErr.message);
+    }
   } catch (error) {
     res.status(400).json({
       success: false,
@@ -124,6 +139,76 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
         timestamp: new Date(),
         note: note || `Status changed to ${status}`,
       });
+
+      // Send status update notification
+      try {
+        const tmpl = templates.bookingUpdate(booking, status);
+        await sendNotification({
+          recipientId: booking.customerId,
+          type: 'both',
+          ...tmpl,
+          relatedBooking: booking._id,
+        });
+      } catch (notifErr) {
+        console.error('Notification error:', notifErr.message);
+      }
+
+      // Auto-generate invoice when service is completed
+      if (status === 'completed') {
+        try {
+          const existingInvoice = await Invoice.findOne({ bookingId: booking._id });
+          if (!existingInvoice) {
+            const populatedBooking = await Booking.findById(booking._id).populate('serviceId');
+            const serviceName = populatedBooking.serviceId?.name || 'Vehicle Service';
+            const servicePrice = populatedBooking.totalPrice || populatedBooking.serviceId?.price || 0;
+
+            const invoiceItems = [
+              {
+                description: serviceName,
+                quantity: 1,
+                unitPrice: servicePrice,
+                total: servicePrice,
+              },
+            ];
+
+            const subtotal = servicePrice;
+            const taxRate = 0.1;
+            const taxAmount = Math.round(subtotal * taxRate * 100) / 100;
+            const totalAmount = Math.round((subtotal + taxAmount) * 100) / 100;
+
+            const invoice = await Invoice.create({
+              bookingId: booking._id,
+              customerId: booking.customerId,
+              items: invoiceItems,
+              subtotal,
+              taxRate,
+              taxAmount,
+              discount: 0,
+              totalAmount,
+              dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+              status: 'sent',
+            });
+
+            // Notify customer about the invoice
+            try {
+              const invTmpl = templates.invoiceSent(invoice);
+              await sendNotification({
+                recipientId: booking.customerId,
+                type: 'both',
+                ...invTmpl,
+                relatedInvoice: invoice._id,
+                relatedBooking: booking._id,
+              });
+            } catch (invNotifErr) {
+              console.error('Invoice notification error:', invNotifErr.message);
+            }
+
+            console.log(`Auto-generated invoice ${invoice.invoiceNumber} for booking ${booking._id}`);
+          }
+        } catch (invoiceErr) {
+          console.error('Auto invoice generation error:', invoiceErr.message);
+        }
+      }
     }
     if (priority) booking.priority = priority;
     if (assignedTech !== undefined) booking.assignedTech = assignedTech;

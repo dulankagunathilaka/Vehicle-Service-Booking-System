@@ -2,6 +2,7 @@ const express = require('express');
 const User = require('../models/User');
 const Booking = require('../models/Booking');
 const Service = require('../models/Service');
+const Review = require('../models/Review');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -245,6 +246,60 @@ router.get('/activity', async (req, res) => {
     activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     res.status(200).json({ success: true, data: activities.slice(0, 20) });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get all reviews (admin)
+router.get('/reviews', async (req, res) => {
+  try {
+    const reviews = await Review.find()
+      .populate('customerId', 'name email')
+      .populate('serviceId', 'name')
+      .populate('bookingId', 'bookingDate')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, count: reviews.length, data: reviews });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Delete a review (admin)
+router.delete('/reviews/:id', async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) {
+      return res.status(404).json({ success: false, message: 'Review not found' });
+    }
+    await review.deleteOne();
+    res.status(200).json({ success: true, message: 'Review deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get review stats (admin)
+router.get('/reviews/stats', async (req, res) => {
+  try {
+    const totalReviews = await Review.countDocuments();
+    const avgRating = await Review.aggregate([
+      { $group: { _id: null, avg: { $avg: '$rating' } } },
+    ]);
+    const ratingDistribution = await Review.aggregate([
+      { $group: { _id: '$rating', count: { $sum: 1 } } },
+      { $sort: { _id: -1 } },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalReviews,
+        averageRating: avgRating.length > 0 ? Math.round(avgRating[0].avg * 10) / 10 : 0,
+        ratingDistribution,
+      },
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

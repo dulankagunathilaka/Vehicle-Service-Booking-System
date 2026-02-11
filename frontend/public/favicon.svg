@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb"/>
+      <stop offset="100%" style="stop-color:#1e40af"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" ry="14" fill="url(#bg)"/>
+  <!-- Simplified car -->
+  <g transform="translate(32,34)">
+    <path d="M-20,2 L-20,-4 Q-20,-8 -16,-8 L16,-8 Q20,-8 20,-4 L20,2 Q20,6 17,6 L-17,6 Q-20,6 -20,2 Z" fill="#fff"/>
+    <path d="M-12,-8 L-8,-16 Q-7,-18 -5,-18 L5,-18 Q7,-18 8,-16 L12,-8" fill="#fff" opacity="0.9"/>
+    <path d="M-10,-9 L-7,-15 Q-6,-17 -4,-17 L-1,-17 L-1,-9 Z" fill="#2563eb" opacity="0.4"/>
+    <path d="M10,-9 L7,-15 Q6,-17 4,-17 L1,-17 L1,-9 Z" fill="#2563eb" opacity="0.4"/>
+    <rect x="-19" y="-5" width="5" height="3" rx="1" fill="#fbbf24"/>
+    <rect x="14" y="-5" width="5" height="3" rx="1" fill="#fbbf24"/>
+  </g>
+  <!-- Wheels -->
+  <circle cx="21" cy="42" r="5" fill="#1e293b"/>
+  <circle cx="21" cy="42" r="2.5" fill="#64748b"/>
+  <circle cx="43" cy="42" r="5" fill="#1e293b"/>
+  <circle cx="43" cy="42" r="2.5" fill="#64748b"/>
+</svg>

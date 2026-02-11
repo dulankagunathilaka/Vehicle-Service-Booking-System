@@ -18,7 +18,11 @@ import {
   Shield,
   Settings,
   Activity,
+  Star,
+  DollarSign,
+  Package,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const navItems = [
   {
@@ -45,6 +49,30 @@ const navItems = [
     Icon: Users,
     desc: "Customer management",
   },
+  {
+    path: "/admin/reviews",
+    label: "Reviews",
+    Icon: Star,
+    desc: "Customer feedback",
+  },
+  {
+    path: "/admin/billing",
+    label: "Billing",
+    Icon: DollarSign,
+    desc: "Invoices & payments",
+  },
+  {
+    path: "/admin/notifications",
+    label: "Notifications",
+    Icon: Bell,
+    desc: "SMS & email alerts",
+  },
+  {
+    path: "/admin/inventory",
+    label: "Inventory",
+    Icon: Package,
+    desc: "Parts & supplies",
+  },
 ];
 
 const breadcrumbMap = {
@@ -61,19 +89,34 @@ const breadcrumbMap = {
     { label: "Dashboard", path: "/admin" },
     { label: "Customers" },
   ],
+  "/admin/reviews": [
+    { label: "Dashboard", path: "/admin" },
+    { label: "Reviews" },
+  ],
+  "/admin/billing": [
+    { label: "Dashboard", path: "/admin" },
+    { label: "Billing" },
+  ],
+  "/admin/notifications": [
+    { label: "Dashboard", path: "/admin" },
+    { label: "Notifications" },
+  ],
+  "/admin/inventory": [
+    { label: "Dashboard", path: "/admin" },
+    { label: "Inventory" },
+  ],
 };
 
 export default function AdminLayout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    logout();
     navigate("/");
   };
 
@@ -99,9 +142,11 @@ export default function AdminLayout({ children }) {
       >
         {/* Logo */}
         <div className="h-16 flex items-center px-4 border-b border-white/10 flex-shrink-0">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-            <Car className="w-5 h-5 text-white" />
-          </div>
+          <img
+            src="/favicon.svg"
+            alt="AutoServe"
+            className="w-10 h-10 rounded-xl shadow-lg flex-shrink-0"
+          />
           {!collapsed && (
             <div className="ml-3 overflow-hidden">
               <h1 className="text-sm font-bold leading-tight">AutoServe</h1>
