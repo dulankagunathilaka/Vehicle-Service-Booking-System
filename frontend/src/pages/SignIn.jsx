@@ -88,7 +88,6 @@ function SignIn() {
 
   return (
     <div className="min-h-screen flex">
-
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900" />
         <div className="absolute inset-0 opacity-10">
@@ -117,7 +116,6 @@ function SignIn() {
 
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
         <div className="w-full max-w-md">
-
           <div className="flex justify-center mb-8 lg:hidden">
             <a href="/">
               <span className="text-2xl font-extrabold text-gray-900">
@@ -139,7 +137,6 @@ function SignIn() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Email Address
@@ -270,7 +267,6 @@ function SignIn() {
               Create Account
             </button>
           </p>
-
         </div>
       </div>
     </div>
