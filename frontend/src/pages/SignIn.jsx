@@ -271,14 +271,6 @@ function SignIn() {
             </button>
           </p>
 
-          <div className="mt-6 bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
-            <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-700">
-              <p className="font-semibold mb-1">Demo Credentials</p>
-              <p className="text-blue-600">Email: demo@example.com</p>
-              <p className="text-blue-600">Password: demo123</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
