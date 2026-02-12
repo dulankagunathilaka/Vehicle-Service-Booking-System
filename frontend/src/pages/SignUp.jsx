@@ -118,7 +118,7 @@ function SignUp() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Panel - Branding */}
+
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900" />
         <div className="absolute inset-0 opacity-10">
@@ -157,10 +157,9 @@ function SignUp() {
         </div>
       </div>
 
-      {/* Right Panel - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
         <div className="w-full max-w-md">
-          {/* Mobile Logo */}
+
           <div className="flex justify-center mb-8 lg:hidden">
             <a href="/">
               <span className="text-2xl font-extrabold text-gray-900">
@@ -193,7 +192,7 @@ function SignUp() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name */}
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Full Name
@@ -221,7 +220,6 @@ function SignUp() {
               )}
             </div>
 
-            {/* Email */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Email Address
@@ -249,7 +247,6 @@ function SignUp() {
               )}
             </div>
 
-            {/* Phone */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Phone Number
@@ -277,7 +274,6 @@ function SignUp() {
               )}
             </div>
 
-            {/* Password */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Password
@@ -305,7 +301,6 @@ function SignUp() {
               )}
             </div>
 
-            {/* Confirm Password */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Confirm Password
@@ -333,7 +328,6 @@ function SignUp() {
               )}
             </div>
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
@@ -371,7 +365,6 @@ function SignUp() {
             </button>
           </form>
 
-          {/* Divider */}
           <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200"></div>
@@ -383,7 +376,6 @@ function SignUp() {
             </div>
           </div>
 
-          {/* Sign In Link */}
           <p className="text-center text-gray-500 text-sm">
             Already have an account?{" "}
             <button

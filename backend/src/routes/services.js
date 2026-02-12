@@ -4,7 +4,6 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// Get all services
 router.get('/', async (req, res) => {
   try {
     const services = await Service.find({ isAvailable: true });
@@ -22,7 +21,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get single service
 router.get('/:id', async (req, res) => {
   try {
     const service = await Service.findById(req.params.id);
@@ -46,7 +44,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create service (admin only)
 router.post('/', protect, authorize('admin'), async (req, res) => {
   try {
     const service = await Service.create(req.body);
@@ -63,7 +60,6 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// Update service (admin only)
 router.put('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const service = await Service.findByIdAndUpdate(req.params.id, req.body, {
@@ -90,7 +86,6 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// Delete service (admin only)
 router.delete('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const service = await Service.findByIdAndDelete(req.params.id);

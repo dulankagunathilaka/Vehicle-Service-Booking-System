@@ -26,9 +26,6 @@ import {
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-/* ═══════════════════════════════════════════ */
-/*            CARD BRAND CONFIG               */
-/* ═══════════════════════════════════════════ */
 const BRANDS = {
   visa: {
     name: "Visa",
@@ -104,9 +101,6 @@ const INVOICE_STATUS = {
   },
 };
 
-/* ═══════════════════════════════════════════ */
-/*            CARD VISUAL COMPONENT           */
-/* ═══════════════════════════════════════════ */
 function CardVisual({ card, small = false }) {
   const brand = BRANDS[card.brand] || BRANDS.unknown;
   return (
@@ -115,7 +109,7 @@ function CardVisual({ card, small = false }) {
         small ? "p-4" : "p-6"
       }`}
     >
-      {/* Decorative circles */}
+
       <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-8 translate-x-8" />
       <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-6 -translate-x-6" />
 
@@ -163,9 +157,6 @@ function CardVisual({ card, small = false }) {
   );
 }
 
-/* ═══════════════════════════════════════════ */
-/*            MAIN PAYMENTS PAGE              */
-/* ═══════════════════════════════════════════ */
 export default function PaymentsPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
@@ -178,15 +169,14 @@ export default function PaymentsPage() {
   const [cards, setCards] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [showAddCard, setShowAddCard] = useState(false);
-  const [showPayModal, setShowPayModal] = useState(null); // invoice object
-  const [paySuccess, setPaySuccess] = useState(null); // transaction data
+  const [showPayModal, setShowPayModal] = useState(null);
+  const [paySuccess, setPaySuccess] = useState(null);
   const [showAmounts, setShowAmounts] = useState(true);
 
-  // Card form state
   const [cardForm, setCardForm] = useState({
     cardNumber: "",
     cardholderName: "",
-    expiry: "", // MM/YY smart input
+    expiry: "",
     cvv: "",
     setDefault: false,
   });
@@ -195,7 +185,6 @@ export default function PaymentsPage() {
   const [paying, setPaying] = useState(false);
   const [selectedCardId, setSelectedCardId] = useState("");
 
-  /* ─── Fetch data ───────────────────────────────── */
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -220,7 +209,6 @@ export default function PaymentsPage() {
     fetchData();
   }, [fetchData]);
 
-  /* ─── Derived ──────────────────────────────────── */
   const unpaidInvoices = useMemo(
     () => invoices.filter((i) => ["sent", "overdue"].includes(i.status)),
     [invoices],
@@ -243,7 +231,6 @@ export default function PaymentsPage() {
     [cardForm.cardNumber],
   );
 
-  /* ─── Smart expiry parser ────────────────── */
   const parseExpiry = (val) => {
     const clean = val.replace(/\D/g, "").slice(0, 4);
     if (clean.length >= 3) return clean.slice(0, 2) + "/" + clean.slice(2);
@@ -258,7 +245,6 @@ export default function PaymentsPage() {
     return parseInt(y.length <= 2 ? "20" + y : y, 10) || 0;
   })();
 
-  /* ─── Smart field validation indicators ────── */
   const cardNumClean = cardForm.cardNumber.replace(/\s/g, "");
   const isCardNumValid = cardNumClean.length >= 13 && luhnCheck(cardNumClean);
   const isNameValid = cardForm.cardholderName.trim().length >= 2;
@@ -276,7 +262,6 @@ export default function PaymentsPage() {
     isCvvValid,
   ].filter(Boolean).length;
 
-  /* ─── Card form validation ─────────────────────── */
   const validateCard = () => {
     const errs = {};
     if (!cardNumClean) errs.cardNumber = "Required";
@@ -299,7 +284,6 @@ export default function PaymentsPage() {
     return Object.keys(errs).length === 0;
   };
 
-  /* ─── Add card ─────────────────────────────────── */
   const handleAddCard = async () => {
     if (!validateCard()) return;
     setSaving(true);
@@ -338,7 +322,6 @@ export default function PaymentsPage() {
     }
   };
 
-  /* ─── Set default ──────────────────────────────── */
   const setDefaultCard = async (id) => {
     try {
       const res = await fetch(`${API}/payments/cards/${id}/default`, {
@@ -352,7 +335,6 @@ export default function PaymentsPage() {
     }
   };
 
-  /* ─── Delete card ──────────────────────────────── */
   const deleteCard = async (id) => {
     if (!window.confirm("Remove this card?")) return;
     try {
@@ -367,7 +349,6 @@ export default function PaymentsPage() {
     }
   };
 
-  /* ─── Pay invoice ──────────────────────────────── */
   const handlePay = async () => {
     if (!selectedCardId) return;
     setPaying(true);
@@ -392,7 +373,6 @@ export default function PaymentsPage() {
     }
   };
 
-  /* ─── Loading ──────────────────────────────────── */
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -410,7 +390,7 @@ export default function PaymentsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
+
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
           <div className="flex items-center justify-between">
@@ -453,7 +433,7 @@ export default function PaymentsPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* Security Banner */}
+
         <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200/60 rounded-2xl px-5 py-3.5">
           <Shield className="w-5 h-5 text-emerald-600 flex-shrink-0" />
           <div>
@@ -468,7 +448,6 @@ export default function PaymentsPage() {
           <Lock className="w-4 h-4 text-emerald-400 flex-shrink-0 ml-auto" />
         </div>
 
-        {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white rounded-2xl border border-slate-200/60 p-5 hover:shadow-md transition">
             <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center mb-3">
@@ -497,7 +476,6 @@ export default function PaymentsPage() {
           </div>
         </div>
 
-        {/* Saved Cards */}
         <section>
           <h2 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-indigo-500" /> Your Cards
@@ -546,7 +524,6 @@ export default function PaymentsPage() {
                 </div>
               ))}
 
-              {/* Add card shortcut */}
               <button
                 onClick={() => setShowAddCard(true)}
                 className="flex flex-col items-center justify-center gap-2 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-8 text-slate-400 hover:text-indigo-500 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all group"
@@ -558,7 +535,6 @@ export default function PaymentsPage() {
           )}
         </section>
 
-        {/* Unpaid Invoices */}
         {unpaidInvoices.length > 0 && (
           <section>
             <h2 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
@@ -621,7 +597,6 @@ export default function PaymentsPage() {
           </section>
         )}
 
-        {/* Payment History */}
         <section>
           <h2 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Payment
@@ -671,7 +646,6 @@ export default function PaymentsPage() {
         </section>
       </div>
 
-      {/* ═══ ADD CARD MODAL ─ Compact Smart Form ═══ */}
       {showAddCard && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
@@ -681,7 +655,7 @@ export default function PaymentsPage() {
             className="bg-white rounded-2xl shadow-2xl max-w-[420px] w-full overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header with live card brand + progress */}
+
             <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div
@@ -722,7 +696,6 @@ export default function PaymentsPage() {
                 </div>
               )}
 
-              {/* Card Number — with live brand badge & check */}
               <div>
                 <div className="relative">
                   <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
@@ -760,7 +733,6 @@ export default function PaymentsPage() {
                 )}
               </div>
 
-              {/* Cardholder Name */}
               <div>
                 <div className="relative">
                   <input
@@ -786,7 +758,6 @@ export default function PaymentsPage() {
                 )}
               </div>
 
-              {/* Expiry (MM/YY) + CVV — single row */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <div className="relative">
@@ -842,7 +813,6 @@ export default function PaymentsPage() {
                 </div>
               </div>
 
-              {/* Smart tips */}
               {cardNumClean.length > 0 && cardNumClean.length < 13 && (
                 <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-lg">
                   <Sparkles className="w-3 h-3 text-blue-500 flex-shrink-0" />
@@ -855,7 +825,6 @@ export default function PaymentsPage() {
                 </div>
               )}
 
-              {/* Default + Submit row */}
               <div className="flex items-center gap-3 pt-1">
                 <label className="flex items-center gap-1.5 cursor-pointer flex-shrink-0">
                   <input
@@ -895,7 +864,6 @@ export default function PaymentsPage() {
         </div>
       )}
 
-      {/* ═══ PAY MODAL ═══ */}
       {showPayModal && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
@@ -923,7 +891,7 @@ export default function PaymentsPage() {
             </div>
 
             <div className="p-6 space-y-5">
-              {/* Amount */}
+
               <div className="bg-slate-50 rounded-2xl p-5 text-center">
                 <p className="text-xs text-slate-500 mb-1">Amount to Pay</p>
                 <p className="text-3xl font-black text-slate-900">
@@ -934,7 +902,6 @@ export default function PaymentsPage() {
                 </p>
               </div>
 
-              {/* Select card */}
               <div>
                 <label className="text-xs font-bold text-slate-500 uppercase block mb-2">
                   Pay with
@@ -986,7 +953,6 @@ export default function PaymentsPage() {
                 </div>
               </div>
 
-              {/* Breakdown */}
               <div className="bg-slate-50 rounded-xl p-4 space-y-2 text-sm">
                 <div className="flex justify-between text-slate-500">
                   <span>Subtotal</span>
@@ -1010,7 +976,6 @@ export default function PaymentsPage() {
                 </div>
               </div>
 
-              {/* Pay button */}
               <button
                 onClick={handlePay}
                 disabled={paying || !selectedCardId}
@@ -1034,7 +999,6 @@ export default function PaymentsPage() {
         </div>
       )}
 
-      {/* ═══ SUCCESS MODAL ═══ */}
       {paySuccess && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"

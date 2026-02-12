@@ -5,7 +5,6 @@ const { sendNotification } = require('../services/notificationService');
 
 const router = express.Router();
 
-// Get my notifications (customer)
 router.get('/my-notifications', protect, async (req, res) => {
   try {
     const notifications = await Notification.find({ recipientId: req.user.id })
@@ -21,7 +20,18 @@ router.get('/my-notifications', protect, async (req, res) => {
   }
 });
 
-// Mark notification as read
+router.put('/mark-all-read', protect, async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { recipientId: req.user.id, isRead: false },
+      { $set: { isRead: true } }
+    );
+    res.status(200).json({ success: true, message: 'All notifications marked as read' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 router.put('/:id/read', protect, async (req, res) => {
   try {
     const notification = await Notification.findById(req.params.id);
@@ -39,22 +49,7 @@ router.put('/:id/read', protect, async (req, res) => {
   }
 });
 
-// Mark all as read
-router.put('/mark-all-read', protect, async (req, res) => {
-  try {
-    await Notification.updateMany(
-      { recipientId: req.user.id, isRead: false },
-      { $set: { isRead: true } }
-    );
-    res.status(200).json({ success: true, message: 'All notifications marked as read' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
 
-// === Admin routes ===
-
-// Get all notifications (admin)
 router.get('/', protect, authorize('admin'), async (req, res) => {
   try {
     const notifications = await Notification.find()
@@ -69,7 +64,6 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// Send custom notification (admin)
 router.post('/send', protect, authorize('admin'), async (req, res) => {
   try {
     const { recipientId, type, subject, message } = req.body;
@@ -95,7 +89,6 @@ router.post('/send', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// Broadcast notification to all customers (admin)
 router.post('/broadcast', protect, authorize('admin'), async (req, res) => {
   try {
     const { type, subject, message } = req.body;
@@ -124,7 +117,6 @@ router.post('/broadcast', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// Notification stats (admin)
 router.get('/stats', protect, authorize('admin'), async (req, res) => {
   try {
     const total = await Notification.countDocuments();
@@ -138,7 +130,6 @@ router.get('/stats', protect, authorize('admin'), async (req, res) => {
     const emailSent = await Notification.countDocuments({ 'channel.email.sent': true });
     const smsSent = await Notification.countDocuments({ 'channel.sms.sent': true });
 
-    // Last 7 days trend
     const dateFrom = new Date();
     dateFrom.setDate(dateFrom.getDate() - 7);
     const daily = await Notification.aggregate([
@@ -156,7 +147,6 @@ router.get('/stats', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// Delete notification (admin)
 router.delete('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const notification = await Notification.findById(req.params.id);
@@ -170,7 +160,15 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// Admin mark notification as read
+router.put('/admin-mark-all-read', protect, authorize('admin'), async (req, res) => {
+  try {
+    await Notification.updateMany({ isRead: false }, { $set: { isRead: true } });
+    res.status(200).json({ success: true, message: 'All notifications marked as read' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 router.put('/:id/admin-read', protect, authorize('admin'), async (req, res) => {
   try {
     const notification = await Notification.findById(req.params.id);
@@ -180,16 +178,6 @@ router.put('/:id/admin-read', protect, authorize('admin'), async (req, res) => {
     notification.isRead = true;
     await notification.save();
     res.status(200).json({ success: true, data: notification });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// Admin mark all as read
-router.put('/admin-mark-all-read', protect, authorize('admin'), async (req, res) => {
-  try {
-    await Notification.updateMany({ isRead: false }, { $set: { isRead: true } });
-    res.status(200).json({ success: true, message: 'All notifications marked as read' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

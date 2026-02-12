@@ -35,11 +35,20 @@ const reviewSchema = new mongoose.Schema(
       trim: true,
       maxlength: 1000,
     },
+    isApproved: {
+      type: Boolean,
+      default: false,
+    },
+    adminReply: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: null,
+    },
   },
   { timestamps: true }
 );
 
-// One review per booking
 reviewSchema.index({ customerId: 1, bookingId: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('Review', reviewSchema);

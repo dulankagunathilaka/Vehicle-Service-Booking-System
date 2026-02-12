@@ -88,7 +88,7 @@ function SignIn() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Panel - Branding */}
+
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900" />
         <div className="absolute inset-0 opacity-10">
@@ -115,10 +115,9 @@ function SignIn() {
         </div>
       </div>
 
-      {/* Right Panel - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
         <div className="w-full max-w-md">
-          {/* Mobile Logo */}
+
           <div className="flex justify-center mb-8 lg:hidden">
             <a href="/">
               <span className="text-2xl font-extrabold text-gray-900">
@@ -140,7 +139,7 @@ function SignIn() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email */}
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Email Address
@@ -168,7 +167,6 @@ function SignIn() {
               )}
             </div>
 
-            {/* Password */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Password
@@ -196,7 +194,6 @@ function SignIn() {
               )}
             </div>
 
-            {/* Remember / Forgot */}
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -216,7 +213,6 @@ function SignIn() {
               </button>
             </div>
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
@@ -254,7 +250,6 @@ function SignIn() {
             </button>
           </form>
 
-          {/* Divider */}
           <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200"></div>
@@ -266,7 +261,6 @@ function SignIn() {
             </div>
           </div>
 
-          {/* Sign Up Link */}
           <p className="text-center text-gray-500 text-sm">
             Don&apos;t have an account?{" "}
             <button
@@ -277,7 +271,6 @@ function SignIn() {
             </button>
           </p>
 
-          {/* Demo Credentials */}
           <div className="mt-6 bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
             <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-blue-700">

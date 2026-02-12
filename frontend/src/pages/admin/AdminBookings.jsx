@@ -302,7 +302,7 @@ export default function AdminBookings() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-gray-900">
@@ -321,7 +321,6 @@ export default function AdminBookings() {
         </button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {stats.map(({ label, value, Icon, color, bg, border }) => (
           <div
@@ -341,7 +340,6 @@ export default function AdminBookings() {
         ))}
       </div>
 
-      {/* Search + Filters + Sort */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -365,7 +363,6 @@ export default function AdminBookings() {
         </select>
       </div>
 
-      {/* Filter Pills */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         <Filter className="w-4 h-4 text-gray-400 flex-shrink-0" />
         {filterOptions.map(({ value, label }) => (
@@ -383,7 +380,6 @@ export default function AdminBookings() {
         ))}
       </div>
 
-      {/* Bookings Table */}
       {loading ? (
         <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
           <Loader className="w-8 h-8 text-blue-600 mx-auto mb-3 animate-spin" />
@@ -517,7 +513,6 @@ export default function AdminBookings() {
         </div>
       )}
 
-      {/* Detail Modal with Tracking Timeline */}
       {selectedBooking && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
@@ -532,7 +527,7 @@ export default function AdminBookings() {
             className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
+
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl z-10">
               <div>
                 <h3 className="text-lg font-bold text-gray-900">
@@ -554,7 +549,7 @@ export default function AdminBookings() {
             </div>
 
             <div className="p-6 space-y-5">
-              {/* Status Flow Tracker */}
+
               <div className="bg-gradient-to-r from-gray-50 to-blue-50/50 rounded-xl p-4">
                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">
                   Progress Tracker
@@ -602,11 +597,10 @@ export default function AdminBookings() {
                 </div>
               </div>
 
-              {/* Two columns: Info + Actions */}
               <div className="grid md:grid-cols-2 gap-4">
-                {/* Left: Info Cards */}
+
                 <div className="space-y-3">
-                  {/* Customer */}
+
                   <div className="bg-gray-50 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <User className="w-4 h-4 text-gray-500" />
@@ -622,7 +616,7 @@ export default function AdminBookings() {
                       {selectedBooking.customerId?.phone}
                     </p>
                   </div>
-                  {/* Service */}
+
                   <div className="bg-blue-50 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <DollarSign className="w-4 h-4 text-blue-600" />
@@ -637,7 +631,7 @@ export default function AdminBookings() {
                       ${selectedBooking.totalPrice}
                     </p>
                   </div>
-                  {/* Vehicle */}
+
                   <div className="bg-gray-50 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Car className="w-4 h-4 text-gray-500" />
@@ -657,7 +651,7 @@ export default function AdminBookings() {
                         : ""}
                     </p>
                   </div>
-                  {/* Schedule */}
+
                   <div className="bg-gray-50 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <CalendarClock className="w-4 h-4 text-gray-500" />
@@ -683,9 +677,8 @@ export default function AdminBookings() {
                   </div>
                 </div>
 
-                {/* Right: Actions & Timeline */}
                 <div className="space-y-3">
-                  {/* Priority & Tech Assignment */}
+
                   <div className="bg-gray-50 rounded-xl p-4 space-y-3">
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
@@ -726,7 +719,6 @@ export default function AdminBookings() {
                     </div>
                   </div>
 
-                  {/* Status Update with Note */}
                   <div className="bg-gray-50 rounded-xl p-4">
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
                       Update Status
@@ -789,7 +781,6 @@ export default function AdminBookings() {
                     </div>
                   </div>
 
-                  {/* Notes */}
                   {selectedBooking.notes && (
                     <div className="bg-gray-50 rounded-xl p-4">
                       <div className="flex items-center gap-2 mb-2">
@@ -806,7 +797,6 @@ export default function AdminBookings() {
                 </div>
               </div>
 
-              {/* Status History Timeline */}
               <div className="bg-gray-50 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-4">
                   <Activity className="w-4 h-4 text-blue-500" />
@@ -817,7 +807,7 @@ export default function AdminBookings() {
                 {selectedBooking.statusHistory &&
                 selectedBooking.statusHistory.length > 0 ? (
                   <div className="relative ml-2">
-                    {/* Timeline line */}
+
                     <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-gray-200" />
                     <div className="space-y-4">
                       {[...selectedBooking.statusHistory]

@@ -30,7 +30,7 @@ const invoiceSchema = new mongoose.Schema(
     },
     taxRate: {
       type: Number,
-      default: 0.1, // 10%
+      default: 0.1,
     },
     taxAmount: {
       type: Number,
@@ -64,7 +64,6 @@ const invoiceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Auto-generate invoice number
 invoiceSchema.pre('save', async function (next) {
   if (!this.invoiceNumber) {
     const count = await mongoose.model('Invoice').countDocuments();

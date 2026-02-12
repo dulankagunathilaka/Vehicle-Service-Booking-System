@@ -48,10 +48,6 @@ import {
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-/* ═══════════════════════════════════════════════════════════════ */
-/*                       HELPER UTILITIES                         */
-/* ═══════════════════════════════════════════════════════════════ */
-
 function getGreeting() {
   const h = new Date().getHours();
   if (h < 6) return { text: "Good Night", icon: Moon, emoji: "🌙" };
@@ -163,7 +159,6 @@ function daysSince(d) {
   );
 }
 
-/* ─── Status Configs ──────────────────────────────────────────── */
 const STATUS = {
   pending: {
     label: "Pending",
@@ -210,9 +205,209 @@ const INVOICE_STATUS = {
   cancelled: { label: "Cancelled", bg: "bg-slate-100", text: "text-slate-500" },
 };
 
-/* ═══════════════════════════════════════════════════════════════ */
-/*                   MICRO COMPONENTS                             */
-/* ═══════════════════════════════════════════════════════════════ */
+function ReviewModal({ booking, token, onClose, onSubmitted }) {
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [title, setTitle] = useState("");
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async () => {
+    if (rating === 0) {
+      setError("Please select a rating");
+      return;
+    }
+    if (!comment.trim()) {
+      setError("Please add a comment");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API}/reviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          bookingId: booking._id,
+          serviceId: booking.serviceId?._id || booking.serviceId,
+          rating,
+          title: title.trim() || undefined,
+          comment: comment.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success)
+        throw new Error(data.message || "Failed to submit review");
+      setSuccess(true);
+      setTimeout(() => {
+        onSubmitted();
+        onClose();
+      }, 1200);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const starLabels = ["Poor", "Fair", "Good", "Very Good", "Excellent"];
+  const activeRating = hoverRating || rating;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fadeInUp overflow-hidden">
+
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 pt-6 pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-lg text-slate-800">
+                Rate Your Experience
+              </h3>
+              <p className="text-sm text-slate-500 mt-0.5">
+                {booking.serviceId?.name || "Service"} •{" "}
+                {formatDate(booking.bookingDate)}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl hover:bg-white/60 text-slate-400 hover:text-slate-600 transition"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+          </div>
+
+          {booking.vehicleInfo && (
+            <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-400">
+              <Car className="w-3.5 h-3.5" />
+              {booking.vehicleInfo.make} {booking.vehicleInfo.model} (
+              {booking.vehicleInfo.year})
+            </div>
+          )}
+        </div>
+
+        <div className="px-6 py-5 space-y-5">
+          {success ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-emerald-500" />
+              </div>
+              <h4 className="font-bold text-lg text-slate-800">Thank You!</h4>
+              <p className="text-sm text-slate-500 mt-1">
+                Your review has been submitted
+              </p>
+            </div>
+          ) : (
+            <>
+
+              <div className="text-center">
+                <div className="flex justify-center gap-2 mb-2">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <button
+                      key={s}
+                      onMouseEnter={() => setHoverRating(s)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      onClick={() => setRating(s)}
+                      className="p-1 transition-transform hover:scale-125 active:scale-95"
+                    >
+                      <Star
+                        className={`w-8 h-8 transition-colors ${
+                          s <= activeRating
+                            ? "text-amber-400 fill-amber-400"
+                            : "text-slate-200"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                <p
+                  className={`text-sm font-medium h-5 transition-all ${
+                    activeRating > 0 ? "text-amber-600" : "text-slate-300"
+                  }`}
+                >
+                  {activeRating > 0
+                    ? starLabels[activeRating - 1]
+                    : "Tap a star to rate"}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Title (optional)
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Sum up your experience"
+                  maxLength={100}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Your Review
+                </label>
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Tell us about your experience..."
+                  rows={3}
+                  maxLength={500}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition resize-none"
+                />
+                <p className="text-right text-[11px] text-slate-300 mt-1">
+                  {comment.length}/500
+                </p>
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-xl px-4 py-2.5">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={onClose}
+                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={submitting || rating === 0}
+                  className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />{" "}
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <Star className="w-4 h-4" /> Submit Review
+                    </>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function AnimNum({ value, prefix = "", suffix = "" }) {
   const [n, setN] = useState(0);
@@ -398,10 +593,6 @@ function SpendingChart({ data }) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════ */
-/*                  MAIN CUSTOMER DASHBOARD                       */
-/* ═══════════════════════════════════════════════════════════════ */
-
 export default function CustomerDashboard() {
   const { user, token } = useAuth();
   const navigate = useNavigate();
@@ -414,6 +605,7 @@ export default function CustomerDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [showAmounts, setShowAmounts] = useState(true);
+  const [reviewBooking, setReviewBooking] = useState(null);
 
   const greeting = useMemo(() => getGreeting(), []);
   const seasonal = useMemo(() => getSeasonalTips(), []);
@@ -422,7 +614,6 @@ export default function CustomerDashboard() {
     [token],
   );
 
-  /* ─── Fetch ───────────────────────────────────────────────────── */
   const fetchDashboard = useCallback(
     async (isRefresh = false) => {
       if (isRefresh) setRefreshing(true);
@@ -457,7 +648,6 @@ export default function CustomerDashboard() {
     fetchDashboard();
   }, [fetchDashboard]);
 
-  /* ─── Computed ────────────────────────────────────────────────── */
   const vehicleHealth = useMemo(() => {
     if (!stats?.vehicles?.length) return 0;
     let total = 0;
@@ -518,7 +708,6 @@ export default function CustomerDashboard() {
     [stats],
   );
 
-  /* ─── Mark as Read ────────────────────────────────────────────── */
   const markAsRead = useCallback(
     async (id) => {
       try {
@@ -554,7 +743,6 @@ export default function CustomerDashboard() {
     }
   }, [headers]);
 
-  /* ─── Loading ─────────────────────────────────────────────────── */
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -604,7 +792,7 @@ export default function CustomerDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* CSS Animations */}
+
       <style>{`
         @keyframes fadeInUp { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }
         @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
@@ -619,7 +807,6 @@ export default function CustomerDashboard() {
         .delay-5 { animation-delay: .25s }
       `}</style>
 
-      {/* ═══ Header ═══ */}
       <header className="bg-white border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 pt-14 pb-4">
@@ -653,7 +840,7 @@ export default function CustomerDashboard() {
               </button>
             </div>
           </div>
-          {/* Tabs */}
+
           <nav className="flex gap-1 -mb-px pt-2">
             {tabs.map((tab) => {
               const active = activeTab === tab.key;
@@ -676,7 +863,6 @@ export default function CustomerDashboard() {
         </div>
       </header>
 
-      {/* ═══ Smart Alerts ═══ */}
       {smartAlerts.length > 0 && activeTab === "overview" && (
         <div className="bg-white border-b border-slate-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap gap-2">
@@ -707,7 +893,6 @@ export default function CustomerDashboard() {
         </div>
       )}
 
-      {/* ═══ Content ═══ */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeTab === "overview" && (
           <OverviewTab
@@ -724,10 +909,16 @@ export default function CustomerDashboard() {
             setActiveTab={setActiveTab}
             markAsRead={markAsRead}
             markAllRead={markAllRead}
+            onReview={setReviewBooking}
           />
         )}
         {activeTab === "bookings" && (
-          <BookingsTab stats={stats} navigate={navigate} />
+          <BookingsTab
+            stats={stats}
+            navigate={navigate}
+            reviewedIds={reviewedIds}
+            onReview={setReviewBooking}
+          />
         )}
         {activeTab === "vehicles" && (
           <VehiclesTab
@@ -745,20 +936,24 @@ export default function CustomerDashboard() {
         )}
       </main>
 
-      {/* Mobile FAB */}
       <button
         onClick={() => navigate("/booking")}
         className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-300 flex items-center justify-center hover:bg-indigo-700 active:scale-95 transition-all z-50"
       >
         <Plus className="w-6 h-6" />
       </button>
+
+      {reviewBooking && (
+        <ReviewModal
+          booking={reviewBooking}
+          token={token}
+          onClose={() => setReviewBooking(null)}
+          onSubmitted={() => fetchDashboard(true)}
+        />
+      )}
     </div>
   );
 }
-
-/* ═══════════════════════════════════════════════════════════════ */
-/*                        OVERVIEW TAB                            */
-/* ═══════════════════════════════════════════════════════════════ */
 
 function OverviewTab({
   stats,
@@ -774,12 +969,13 @@ function OverviewTab({
   setActiveTab,
   markAsRead,
   markAllRead,
+  onReview,
 }) {
   return (
     <div className="space-y-6">
-      {/* ─── Stats Cards ────────────────────────────────────────── */}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* Total Bookings */}
+
         <div className="animate-fadeInUp delay-1 bg-white rounded-2xl border border-slate-200/60 p-4 sm:p-5 hover:shadow-md transition group">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -797,7 +993,6 @@ function OverviewTab({
           <p className="text-xs text-slate-500 mt-0.5">Total Bookings</p>
         </div>
 
-        {/* Completed */}
         <div className="animate-fadeInUp delay-2 bg-white rounded-2xl border border-slate-200/60 p-4 sm:p-5 hover:shadow-md transition group">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -816,7 +1011,6 @@ function OverviewTab({
           <p className="text-xs text-slate-500 mt-0.5">Completed</p>
         </div>
 
-        {/* Spending */}
         <div className="animate-fadeInUp delay-3 bg-white rounded-2xl border border-slate-200/60 p-4 sm:p-5 hover:shadow-md transition group relative">
           <button
             onClick={() => setShowAmounts(!showAmounts)}
@@ -848,7 +1042,6 @@ function OverviewTab({
           )}
         </div>
 
-        {/* Vehicle Health */}
         <div className="animate-fadeInUp delay-4 bg-white rounded-2xl border border-slate-200/60 p-4 sm:p-5 hover:shadow-md transition group">
           <div className="flex items-center justify-between">
             <div>
@@ -875,11 +1068,10 @@ function OverviewTab({
         </div>
       </div>
 
-      {/* ─── Two-Column Layout ──────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* LEFT — 2/3 */}
+
         <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-          {/* Recent Bookings */}
+
           <section className="animate-fadeInUp delay-2 bg-white rounded-2xl border border-slate-200/60 overflow-hidden">
             <div className="flex items-center justify-between px-5 pt-5 pb-3">
               <div>
@@ -979,9 +1171,8 @@ function OverviewTab({
             )}
           </section>
 
-          {/* Smart Suggestion + Seasonal */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Smart Suggestion */}
+
             <div className="animate-fadeInUp delay-3 bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 rounded-2xl p-5 text-white relative overflow-hidden">
               <div className="absolute -top-6 -right-6 w-28 h-28 bg-white/5 rounded-full" />
               <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-white/5 rounded-full" />
@@ -1022,7 +1213,6 @@ function OverviewTab({
               </div>
             </div>
 
-            {/* Seasonal Tips */}
             <div className="animate-fadeInUp delay-4 bg-white rounded-2xl border border-slate-200/60 p-5">
               <div className="flex items-center gap-2 mb-4">
                 <div
@@ -1060,7 +1250,6 @@ function OverviewTab({
             </div>
           </div>
 
-          {/* Review Prompts */}
           {unreviewedCompleted.length > 0 && (
             <div className="animate-fadeInUp delay-5 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 rounded-2xl border border-amber-200/50 p-5">
               <div className="flex items-center gap-2 mb-3">
@@ -1076,9 +1265,10 @@ function OverviewTab({
                 {unreviewedCompleted.slice(0, 4).map((b) => (
                   <div
                     key={b._id}
-                    className="bg-white rounded-xl p-3 border border-amber-100 flex items-center gap-3"
+                    onClick={() => onReview(b)}
+                    className="bg-white rounded-xl p-3 border border-amber-100 flex items-center gap-3 cursor-pointer hover:border-amber-300 hover:shadow-sm transition group"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center shrink-0 group-hover:bg-amber-100 transition">
                       <Wrench className="w-4 h-4 text-amber-600" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -1089,13 +1279,16 @@ function OverviewTab({
                         {formatDate(b.bookingDate)}
                       </p>
                     </div>
-                    <div className="flex gap-0.5">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star
-                          key={s}
-                          className="w-3.5 h-3.5 text-slate-200 hover:text-amber-400 cursor-pointer transition"
-                        />
-                      ))}
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex gap-0.5">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            className="w-3.5 h-3.5 text-slate-200 group-hover:text-amber-400 transition"
+                          />
+                        ))}
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-amber-500 transition" />
                     </div>
                   </div>
                 ))}
@@ -1104,9 +1297,8 @@ function OverviewTab({
           )}
         </div>
 
-        {/* RIGHT — 1/3 */}
         <div className="space-y-4 sm:space-y-6">
-          {/* Spending Chart */}
+
           <section className="animate-fadeInUp delay-3 bg-white rounded-2xl border border-slate-200/60 p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-sm text-slate-800">Spending</h3>
@@ -1137,7 +1329,6 @@ function OverviewTab({
             )}
           </section>
 
-          {/* Notifications */}
           <section className="animate-fadeInUp delay-4 bg-white rounded-2xl border border-slate-200/60 p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -1224,7 +1415,6 @@ function OverviewTab({
             )}
           </section>
 
-          {/* Top Services */}
           {stats?.topServices?.length > 0 && (
             <section className="animate-fadeInUp delay-5 bg-white rounded-2xl border border-slate-200/60 p-5">
               <h3 className="font-semibold text-sm text-slate-800 mb-3">
@@ -1262,11 +1452,7 @@ function OverviewTab({
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════ */
-/*                        BOOKINGS TAB                            */
-/* ═══════════════════════════════════════════════════════════════ */
-
-function BookingsTab({ stats, navigate }) {
+function BookingsTab({ stats, navigate, reviewedIds, onReview }) {
   const [filter, setFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
 
@@ -1310,7 +1496,7 @@ function BookingsTab({ stats, navigate }) {
 
   return (
     <div className="space-y-4">
-      {/* Filters + Sort */}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex flex-wrap gap-1.5">
           {filters.map((f) => {
@@ -1347,7 +1533,6 @@ function BookingsTab({ stats, navigate }) {
         </select>
       </div>
 
-      {/* List */}
       {filtered.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200/60 p-12 text-center">
           <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
@@ -1430,14 +1615,27 @@ function BookingsTab({ stats, navigate }) {
                       <ProgressTracker status={b.status} />
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
+                  <div className="text-right shrink-0 flex flex-col items-end gap-2">
                     <p className="text-xl font-bold text-slate-800">
                       ${b.totalPrice}
                     </p>
                     {b.assignedTech && (
-                      <p className="text-[11px] text-slate-400 mt-1">
+                      <p className="text-[11px] text-slate-400">
                         Tech: {b.assignedTech}
                       </p>
+                    )}
+                    {b.status === "completed" && !reviewedIds?.has(b._id) && (
+                      <button
+                        onClick={() => onReview(b)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-xs font-semibold text-amber-700 hover:bg-amber-100 hover:border-amber-300 transition"
+                      >
+                        <Star className="w-3.5 h-3.5" /> Leave Review
+                      </button>
+                    )}
+                    {b.status === "completed" && reviewedIds?.has(b._id) && (
+                      <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
+                        <CheckCircle className="w-3.5 h-3.5" /> Reviewed
+                      </span>
                     )}
                   </div>
                 </div>
@@ -1450,16 +1648,12 @@ function BookingsTab({ stats, navigate }) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════ */
-/*                        VEHICLES TAB                            */
-/* ═══════════════════════════════════════════════════════════════ */
-
 function VehiclesTab({ stats, vehicleHealth, navigate }) {
   const vehicles = stats?.vehicles || [];
 
   return (
     <div className="space-y-6">
-      {/* Health Banner */}
+
       <div className="animate-fadeInUp bg-white rounded-2xl border border-slate-200/60 p-5 sm:p-6">
         <div className="flex flex-col sm:flex-row items-center gap-5">
           <ProgressRing value={vehicleHealth} size={80} strokeWidth={6} />
@@ -1488,7 +1682,6 @@ function VehiclesTab({ stats, vehicleHealth, navigate }) {
         </div>
       </div>
 
-      {/* Vehicle Cards */}
       {vehicles.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200/60 p-12 text-center">
           <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
@@ -1616,17 +1809,13 @@ function VehiclesTab({ stats, vehicleHealth, navigate }) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════ */
-/*                        BILLING TAB                             */
-/* ═══════════════════════════════════════════════════════════════ */
-
 function BillingTab({ stats, showAmounts, setShowAmounts }) {
   const invoices = stats?.invoices || [];
   const monthlySpending = stats?.monthlySpending || [];
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="animate-fadeInUp delay-1 bg-white rounded-2xl border border-slate-200/60 p-5">
           <div className="flex items-center justify-between mb-2">
@@ -1673,7 +1862,6 @@ function BillingTab({ stats, showAmounts, setShowAmounts }) {
         </div>
       </div>
 
-      {/* Spending Chart */}
       <div className="animate-fadeInUp delay-2 bg-white rounded-2xl border border-slate-200/60 p-5">
         <h3 className="font-semibold text-sm text-slate-800 mb-4">
           Monthly Spending
@@ -1688,7 +1876,6 @@ function BillingTab({ stats, showAmounts, setShowAmounts }) {
         )}
       </div>
 
-      {/* Invoice List */}
       <div className="animate-fadeInUp delay-3 bg-white rounded-2xl border border-slate-200/60 overflow-hidden">
         <div className="px-5 pt-5 pb-3">
           <h3 className="font-semibold text-sm text-slate-800">

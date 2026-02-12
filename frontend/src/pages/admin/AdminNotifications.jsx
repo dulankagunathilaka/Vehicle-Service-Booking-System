@@ -266,7 +266,6 @@ export default function AdminNotifications() {
         </div>
       </div>
 
-      {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
@@ -321,7 +320,6 @@ export default function AdminNotifications() {
         </div>
       )}
 
-      {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -351,7 +349,6 @@ export default function AdminNotifications() {
         </div>
       </div>
 
-      {/* Notification List */}
       {filtered.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
           <Inbox className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -463,7 +460,6 @@ export default function AdminNotifications() {
         </div>
       )}
 
-      {/* Detail Modal */}
       {selectedNotification && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
@@ -537,7 +533,6 @@ export default function AdminNotifications() {
         </div>
       )}
 
-      {/* Send Notification Modal */}
       {showSendModal && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
@@ -644,7 +639,6 @@ export default function AdminNotifications() {
         </div>
       )}
 
-      {/* Broadcast Modal */}
       {showBroadcastModal && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"

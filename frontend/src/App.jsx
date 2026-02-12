@@ -51,34 +51,46 @@ import AdminBilling from "./pages/admin/AdminBilling";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminInventory from "./pages/admin/AdminInventory";
 
-// Redirect logged-in users away from signin/signup
+function AuthLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50">
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative">
+          <div className="w-12 h-12 rounded-full border-4 border-blue-100" />
+          <div className="absolute inset-0 w-12 h-12 rounded-full border-4 border-transparent border-t-blue-600 animate-spin" />
+        </div>
+        <p className="text-sm text-gray-400 font-medium tracking-wide">
+          Loading…
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function GuestRoute({ children }) {
   const { isAuthenticated, isAdmin, loading } = useAuth();
-  if (loading) return null;
+  if (loading) return <AuthLoading />;
   if (isAuthenticated)
     return <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace />;
   return children;
 }
 
-// Protect customer routes
 function CustomerGuard({ children }) {
   const { isAuthenticated, isCustomer, loading } = useAuth();
-  if (loading) return null;
+  if (loading) return <AuthLoading />;
   if (!isAuthenticated) return <Navigate to="/signin" replace />;
   if (!isCustomer) return <Navigate to="/admin" replace />;
   return children;
 }
 
-// Protect admin routes
 function AdminGuard({ children }) {
   const { isAuthenticated, isAdmin, loading } = useAuth();
-  if (loading) return null;
+  if (loading) return <AuthLoading />;
   if (!isAuthenticated) return <Navigate to="/signin" replace />;
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
   return <AdminLayout>{children}</AdminLayout>;
 }
 
-// Layout wrapper that includes the shared Navbar
 function WithNavbar({ children, transparent }) {
   return (
     <>
@@ -318,7 +330,6 @@ const stats = [
   { Icon: Headphones, value: "24/7", label: "Customer Support" },
 ];
 
-// Animated counter hook
 function useCountUp(target, duration = 2000) {
   const [count, setCount] = useState(0);
   const ref = useRef(null);
@@ -382,7 +393,6 @@ const howItWorks = [
   },
 ];
 
-// Typing effect hook
 function useTypingEffect(
   words,
   typingSpeed = 100,
@@ -416,8 +426,7 @@ function useTypingEffect(
   return text;
 }
 
-// Testimonials data
-const testimonials = [
+const fallbackTestimonials = [
   {
     name: "Sarah Johnson",
     role: "Toyota Camry Owner",
@@ -438,7 +447,6 @@ const testimonials = [
   },
 ];
 
-// Live activity feed for hero
 const liveActivities = [
   {
     text: "Oil Change completed",
@@ -479,17 +487,38 @@ function HomePage() {
   );
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [liveIdx, setLiveIdx] = useState(0);
+  const [testimonials, setTestimonials] = useState(fallbackTestimonials);
 
-  // Auto-rotate testimonials
   useEffect(() => {
+    const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    fetch(`${API}/reviews`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.data && data.data.length > 0) {
+          const mapped = data.data.map((r) => ({
+            name: r.customerId?.name || "Happy Customer",
+            role: r.serviceId?.name
+              ? `${r.serviceId.name} Customer`
+              : "Verified Customer",
+            text: r.comment,
+            rating: r.rating,
+          }));
+          setTestimonials(mapped);
+          setActiveTestimonial(0);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (testimonials.length === 0) return;
     const t = setInterval(
       () => setActiveTestimonial((p) => (p + 1) % testimonials.length),
       5000,
     );
     return () => clearInterval(t);
-  }, []);
+  }, [testimonials]);
 
-  // Cycle live activity
   useEffect(() => {
     const t = setInterval(
       () => setLiveIdx((p) => (p + 1) % liveActivities.length),
@@ -500,9 +529,9 @@ function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* ═══════════════ HERO SECTION ═══════════════ */}
+
       <section className="relative overflow-hidden -mt-[4.25rem] lg:-mt-[4.5rem] pt-[4.25rem] lg:pt-[4.5rem]">
-        {/* Background */}
+
         <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-blue-950 to-gray-950" />
         <div className="absolute inset-0">
           <div className="absolute top-10 left-1/3 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px]" />
@@ -511,7 +540,7 @@ function HomePage() {
 
         <div className="relative container mx-auto max-w-6xl px-4 py-20 md:py-28">
           <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
-            {/* ── Left ── */}
+
             <div>
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white/[0.07] border border-white/10 rounded-full text-sm text-blue-300 mb-6">
                 <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
@@ -532,7 +561,6 @@ function HomePage() {
                 AutoServe connects you with certified service centers instantly.
               </p>
 
-              {/* Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 mb-10">
                 <button
                   onClick={() => (window.location.href = "/booking")}
@@ -549,7 +577,6 @@ function HomePage() {
                 </button>
               </div>
 
-              {/* Trust row */}
               <div className="flex flex-wrap items-center gap-5 text-sm text-gray-400">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
@@ -568,12 +595,11 @@ function HomePage() {
               </div>
             </div>
 
-            {/* ── Right — Live Service Preview ── */}
             <div className="hidden md:block">
               <div className="relative">
-                {/* Main card */}
+
                 <div className="bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl">
-                  {/* Header */}
+
                   <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-2.5">
                       <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
@@ -596,7 +622,6 @@ function HomePage() {
                     </div>
                   </div>
 
-                  {/* Quick stats */}
                   <div className="grid grid-cols-3 gap-2.5 mb-5">
                     {[
                       {
@@ -632,7 +657,6 @@ function HomePage() {
                     ))}
                   </div>
 
-                  {/* Live feed — cycling */}
                   <div className="space-y-2">
                     {liveActivities.map((item, idx) => {
                       const isActive = idx === liveIdx;
@@ -669,7 +693,6 @@ function HomePage() {
                   </div>
                 </div>
 
-                {/* Floating badge */}
                 <div className="absolute -top-3 -right-3 bg-white/[0.08] backdrop-blur-xl border border-white/15 rounded-xl px-3.5 py-2 shadow-lg animate-float">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
@@ -684,7 +707,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════ HOW IT WORKS ═══════════════ */}
       <section className="py-14 px-4 bg-gray-50 border-b border-gray-100">
         <div className="container mx-auto max-w-4xl">
           <p className="text-center text-xs font-semibold text-blue-600 uppercase tracking-wider mb-8">
@@ -717,7 +739,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Features Section */}
       <section id="features" className="py-24 px-4 bg-white">
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-20">
@@ -755,7 +776,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Services Section */}
       <section id="services" className="py-24 px-4 bg-gray-50">
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-20">
@@ -796,7 +816,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Stats Section — Animated Counters */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950" />
         <div className="absolute inset-0">
@@ -833,7 +852,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════ TESTIMONIALS ═══════════════ */}
       <section className="py-20 px-4 bg-white">
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-12">
@@ -848,30 +866,33 @@ function HomePage() {
             <div className="bg-gray-50 rounded-2xl p-8 md:p-10 border border-gray-100">
               <Quote className="w-8 h-8 text-blue-200 mb-4" />
               <p className="text-gray-700 text-base md:text-lg leading-relaxed mb-6 min-h-[60px] transition-all duration-500">
-                {testimonials[activeTestimonial].text}
+                {(testimonials[activeTestimonial] || testimonials[0])?.text}
               </p>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-900 font-semibold text-sm">
-                    {testimonials[activeTestimonial].name}
+                    {(testimonials[activeTestimonial] || testimonials[0])?.name}
                   </p>
                   <p className="text-gray-500 text-xs">
-                    {testimonials[activeTestimonial].role}
+                    {(testimonials[activeTestimonial] || testimonials[0])?.role}
                   </p>
                 </div>
                 <div className="flex gap-0.5">
-                  {[...Array(testimonials[activeTestimonial].rating)].map(
-                    (_, i) => (
-                      <Star
-                        key={i}
-                        className="w-4 h-4 text-amber-400 fill-amber-400"
-                      />
+                  {[
+                    ...Array(
+                      (testimonials[activeTestimonial] || testimonials[0])
+                        ?.rating || 5,
                     ),
-                  )}
+                  ].map((_, i) => (
+                    <Star
+                      key={i}
+                      className="w-4 h-4 text-amber-400 fill-amber-400"
+                    />
+                  ))}
                 </div>
               </div>
             </div>
-            {/* Dots + arrows */}
+
             <div className="flex items-center justify-center gap-4 mt-6">
               <button
                 onClick={() =>
@@ -909,7 +930,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════ CTA SECTION ═══════════════ */}
       <section className="py-20 px-4 bg-gradient-to-br from-blue-600 to-indigo-700 relative overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white/5 rounded-full blur-[100px]" />
@@ -955,7 +975,53 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
+      <section id="contact" className="py-20 px-4 bg-gray-50">
+        <div className="container mx-auto max-w-4xl">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-blue-600 tracking-wider uppercase mb-3">
+              Get In Touch
+            </p>
+            <h3 className="text-2xl md:text-3xl font-bold text-gray-900">
+              Contact Us
+            </h3>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            <a
+              href="tel:+94705283688"
+              className="group bg-white rounded-2xl border border-gray-100 p-8 text-center hover:shadow-lg hover:border-blue-100 transition-all"
+            >
+              <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-100 transition">
+                <Headphones className="w-6 h-6 text-blue-600" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-1">Call Us</h4>
+              <p className="text-sm text-gray-500">+94 70 528 3688</p>
+            </a>
+            <a
+              href="mailto:support@autoserve.com"
+              className="group bg-white rounded-2xl border border-gray-100 p-8 text-center hover:shadow-lg hover:border-blue-100 transition-all"
+            >
+              <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-emerald-100 transition">
+                <ClipboardCheck className="w-6 h-6 text-emerald-600" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-1">Email Us</h4>
+              <p className="text-sm text-gray-500">support@autoserve.com</p>
+            </a>
+            <a
+              href="https://maps.google.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group bg-white rounded-2xl border border-gray-100 p-8 text-center hover:shadow-lg hover:border-blue-100 transition-all"
+            >
+              <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-amber-100 transition">
+                <MapPin className="w-6 h-6 text-amber-600" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-1">Visit Us</h4>
+              <p className="text-sm text-gray-500">Colombo, Sri Lanka</p>
+            </a>
+          </div>
+        </div>
+      </section>
+
       <footer className="bg-gray-900 text-gray-400 py-14 px-4">
         <div className="container mx-auto max-w-5xl">
           <div className="grid md:grid-cols-4 gap-8 mb-10">
@@ -981,13 +1047,18 @@ function HomePage() {
                   </a>
                 </li>
                 <li>
-                  <a href="#services" className="hover:text-white transition">
+                  <a href="/#services" className="hover:text-white transition">
                     Services
                   </a>
                 </li>
                 <li>
                   <a href="/learn-more" className="hover:text-white transition">
                     About
+                  </a>
+                </li>
+                <li>
+                  <a href="/booking" className="hover:text-white transition">
+                    Book Now
                   </a>
                 </li>
               </ul>
@@ -998,17 +1069,26 @@ function HomePage() {
               </h5>
               <ul className="text-sm space-y-2.5">
                 <li>
-                  <a href="#" className="hover:text-white transition">
+                  <a
+                    href="/learn-more#privacy"
+                    className="hover:text-white transition"
+                  >
                     Privacy Policy
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition">
+                  <a
+                    href="/learn-more#terms"
+                    className="hover:text-white transition"
+                  >
                     Terms of Service
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition">
+                  <a
+                    href="mailto:support@autoserve.com"
+                    className="hover:text-white transition"
+                  >
                     Support
                   </a>
                 </li>
@@ -1018,8 +1098,18 @@ function HomePage() {
               <h5 className="text-white font-semibold mb-4 text-sm tracking-wider uppercase">
                 Contact
               </h5>
-              <p className="text-sm mb-1">support@autoserve.com</p>
-              <p className="text-sm">+1 (555) 123-4567</p>
+              <a
+                href="mailto:support@autoserve.com"
+                className="text-sm block mb-2 hover:text-white transition"
+              >
+                support@autoserve.com
+              </a>
+              <a
+                href="tel:+94705283688"
+                className="text-sm block hover:text-white transition"
+              >
+                +94 70 528 3688
+              </a>
             </div>
           </div>
 

@@ -36,8 +36,6 @@ const paymentCardSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    // In production, store a Stripe/payment gateway token instead
-    // This is a simulated token for demo purposes
     paymentToken: {
       type: String,
       required: true,
@@ -48,7 +46,6 @@ const paymentCardSchema = new mongoose.Schema(
 
 paymentCardSchema.index({ userId: 1 });
 
-// Virtual to check if card is expired
 paymentCardSchema.virtual('isExpired').get(function () {
   const now = new Date();
   const expDate = new Date(this.expiryYear, this.expiryMonth, 0);

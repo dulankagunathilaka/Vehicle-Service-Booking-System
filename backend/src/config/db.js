@@ -4,7 +4,7 @@ const connectDB = async () => {
   try {
     const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/autoserve';
     console.log('Attempting to connect to MongoDB...');
-    
+
     await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 5000,
     });
@@ -17,4 +17,3 @@ const connectDB = async () => {
 };
 
 module.exports = connectDB;
-

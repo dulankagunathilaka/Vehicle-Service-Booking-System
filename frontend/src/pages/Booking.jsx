@@ -47,7 +47,6 @@ import {
   Gauge,
 } from "lucide-react";
 
-/* ─── Popular vehicle data for smart suggestions ─────────────── */
 const popularMakes = [
   "Toyota",
   "Honda",
@@ -164,7 +163,6 @@ const modelsByMake = {
   Porsche: ["911", "Cayenne", "Macan", "Taycan", "Panamera", "718 Boxster"],
 };
 
-/* ─── Category config ────────────────────────────────────────────── */
 const categoryConfig = {
   maintenance: {
     label: "Maintenance",
@@ -226,7 +224,6 @@ const categoryConfig = {
 
 const categories = ["all", ...Object.keys(categoryConfig)];
 
-/* ─── Time slots with smart popularity data ──────────────────── */
 const timeSlotData = [
   { time: "09:00 AM", popularity: "high", period: "morning" },
   { time: "10:00 AM", popularity: "high", period: "morning" },
@@ -259,7 +256,6 @@ const popularityColors = {
   },
 };
 
-/* ─── Smart date helpers ─────────────────────────────────────── */
 function getSmartDates() {
   const dates = [];
   const today = new Date();
@@ -282,7 +278,7 @@ function getSmartDates() {
   for (let i = 1; i <= 14; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
-    if (d.getDay() === 0) continue; // Skip Sundays
+    if (d.getDay() === 0) continue;
     dates.push({
       date: d.toISOString().split("T")[0],
       dayName: dayNames[d.getDay()],
@@ -302,7 +298,6 @@ function getSmartDates() {
   return dates;
 }
 
-/* ─── Confetti particle ──────────────────────────────────────── */
 function ConfettiCanvas() {
   const canvasRef = useRef(null);
   useEffect(() => {
@@ -371,7 +366,6 @@ function ConfettiCanvas() {
   );
 }
 
-/* ─── Animated number counter ────────────────────────────────── */
 function AnimatedPrice({ value }) {
   const [displayed, setDisplayed] = useState(0);
   useEffect(() => {
@@ -387,14 +381,11 @@ function AnimatedPrice({ value }) {
       if (progress < 1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [value]);
   return <>{displayed}</>;
 }
 
-/* ═══════════════════════════════════════════════════════════════ */
-/*  BOOKING PAGE                                                  */
-/* ═══════════════════════════════════════════════════════════════ */
 function BookingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -429,10 +420,9 @@ function BookingPage() {
     notes: "",
   });
 
-  /* ── Fetch services ── */
   useEffect(() => {
     fetchServices();
-    // Load saved vehicle from localStorage
+
     const saved = localStorage.getItem("lastVehicle");
     if (saved) {
       try {
@@ -440,7 +430,7 @@ function BookingPage() {
         setSavedVehicle(parsed);
         setShowSavedVehicleHint(true);
       } catch {
-        /* ignore */
+
       }
     }
   }, []);
@@ -455,7 +445,6 @@ function BookingPage() {
     }
   };
 
-  /* ── Handlers ── */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -500,7 +489,6 @@ function BookingPage() {
     }
   };
 
-  /* ── Validation ── */
   const validateStep = () => {
     const newErrors = {};
     if (step === 1 && !formData.serviceId)
@@ -524,7 +512,7 @@ function BookingPage() {
   const goToStep = (target) => {
     setDirection(target > step ? "forward" : "backward");
     setStep(target);
-    // Scroll to top of content
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -565,7 +553,7 @@ function BookingPage() {
       });
       const data = await response.json();
       if (data.success) {
-        // Save vehicle info for next time
+
         localStorage.setItem(
           "lastVehicle",
           JSON.stringify(formData.vehicleInfo),
@@ -586,7 +574,6 @@ function BookingPage() {
     }
   };
 
-  /* ── Derived data ── */
   const selectedService = services.find((s) => s._id === formData.serviceId);
   const smartDates = useMemo(() => getSmartDates(), []);
 
@@ -609,7 +596,6 @@ function BookingPage() {
       ? services.reduce((a, b) => (a.price > b.price ? a : b))._id
       : null;
 
-  // Smart recommendations based on vehicle age
   const vehicleAge =
     new Date().getFullYear() -
     (formData.vehicleInfo.year || new Date().getFullYear());
@@ -628,7 +614,6 @@ function BookingPage() {
     m.toLowerCase().includes((formData.vehicleInfo.model || "").toLowerCase()),
   );
 
-  // Estimate total with tax
   const subtotal = selectedService?.price || 0;
   const tax = Math.round(subtotal * 0.1 * 100) / 100;
   const total = Math.round((subtotal + tax) * 100) / 100;
@@ -645,7 +630,6 @@ function BookingPage() {
     { num: 4, label: "Review", desc: "Confirm booking", Icon: ClipboardCheck },
   ];
 
-  /* ── Close dropdowns on outside click ── */
   useEffect(() => {
     const handleClick = (e) => {
       if (makeRef.current && !makeRef.current.contains(e.target))
@@ -657,15 +641,12 @@ function BookingPage() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  /* ═══════════════════════════════════════════════════════════════ */
-  /*  SUCCESS SCREEN                                                */
-  /* ═══════════════════════════════════════════════════════════════ */
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 flex items-center justify-center p-4">
         <ConfettiCanvas />
         <div className="max-w-lg w-full text-center animate-[fadeInUp_0.6s_ease-out]">
-          {/* Success icon */}
+
           <div className="relative mx-auto w-28 h-28 mb-8">
             <div className="absolute inset-0 bg-emerald-400/20 rounded-full animate-ping" />
             <div className="absolute inset-2 bg-emerald-400/30 rounded-full animate-pulse" />
@@ -771,14 +752,11 @@ function BookingPage() {
     );
   }
 
-  /* ═══════════════════════════════════════════════════════════════ */
-  /*  MAIN BOOKING FLOW                                             */
-  /* ═══════════════════════════════════════════════════════════════ */
   return (
     <div className="min-h-screen flex flex-col bg-gray-50/80">
-      {/* ═══ HERO HEADER ═══ */}
+
       <div className="bg-gradient-to-r from-gray-900 via-blue-950 to-gray-900 text-white relative overflow-hidden">
-        {/* Decorative blobs */}
+
         <div className="absolute -top-24 -right-24 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl" />
 
@@ -831,10 +809,9 @@ function BookingPage() {
         </div>
       </div>
 
-      {/* ═══ PROGRESS STEPS ═══ */}
       <div className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-30">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          {/* Progress bar background */}
+
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-100">
             <div
               className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-700 ease-out"
@@ -886,7 +863,6 @@ function BookingPage() {
         </div>
       </div>
 
-      {/* ═══ ALERTS ═══ */}
       {errors.submit && (
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-5">
           <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-xl animate-[shake_0.4s_ease-out]">
@@ -903,7 +879,6 @@ function BookingPage() {
         </div>
       )}
 
-      {/* ═══ MAIN CONTENT ═══ */}
       <form onSubmit={handleSubmit} className="flex-1">
         <div
           ref={contentRef}
@@ -911,12 +886,10 @@ function BookingPage() {
           style={{ animation: "fadeSlide 0.4s ease-out" }}
           key={step}
         >
-          {/* ─────────────────────────────────────────────────────── */}
-          {/* STEP 1: SERVICE SELECTION                              */}
-          {/* ─────────────────────────────────────────────────────── */}
+
           {step === 1 && (
             <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-              {/* Header */}
+
               <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -936,7 +909,6 @@ function BookingPage() {
                   </p>
                 </div>
 
-                {/* Selected service floating badge */}
                 {selectedService && (
                   <div className="flex items-center gap-3 bg-white border-2 border-blue-100 rounded-2xl px-5 py-3 shadow-sm animate-[fadeInUp_0.3s_ease-out]">
                     <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
@@ -959,7 +931,6 @@ function BookingPage() {
                 )}
               </div>
 
-              {/* Smart recommendation hint */}
               {formData.vehicleInfo.year &&
                 formData.vehicleInfo.year < new Date().getFullYear() && (
                   <div className="mb-4 flex items-center gap-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl px-5 py-3">
@@ -982,7 +953,6 @@ function BookingPage() {
                   </div>
                 )}
 
-              {/* Search & Filter Bar */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-6">
                 <div className="flex flex-col md:flex-row gap-3">
                   <div className="relative flex-1">
@@ -1071,7 +1041,6 @@ function BookingPage() {
                 </div>
               </div>
 
-              {/* Smart Picks for You */}
               {services.length > 0 && !formData.serviceId && (
                 <div className="mb-6 animate-[fadeInUp_0.4s_ease-out]">
                   <div className="flex items-center gap-2 mb-3">
@@ -1127,7 +1096,6 @@ function BookingPage() {
                 </div>
               )}
 
-              {/* Service Cards Grid */}
               {filtered.length > 0 ? (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {filtered.map((service, idx) => {
@@ -1162,12 +1130,11 @@ function BookingPage() {
                           animation: "fadeInUp 0.4s ease-out both",
                         }}
                       >
-                        {/* Top gradient accent */}
+
                         <div
                           className={`h-1.5 w-full bg-gradient-to-r ${conf.accent} transition-all duration-300 ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
                         />
 
-                        {/* Selection indicator */}
                         <div
                           className={`absolute top-4 right-4 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 z-10 ${
                             isSelected
@@ -1181,7 +1148,7 @@ function BookingPage() {
                         </div>
 
                         <div className="p-5 sm:p-6">
-                          {/* Category icon */}
+
                           <div
                             className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 ${isSelected ? conf.iconBg : "bg-gray-50 group-hover:" + conf.iconBg}`}
                           >
@@ -1190,7 +1157,6 @@ function BookingPage() {
                             />
                           </div>
 
-                          {/* Badges */}
                           <div className="flex items-center gap-1.5 mb-3 flex-wrap">
                             <span
                               className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${conf.badge}`}
@@ -1217,17 +1183,14 @@ function BookingPage() {
                             )}
                           </div>
 
-                          {/* Name */}
                           <h3 className="font-bold text-gray-900 text-base sm:text-lg leading-snug mb-2">
                             {service.name}
                           </h3>
 
-                          {/* Description */}
                           <p className="text-xs sm:text-sm text-gray-500 mb-5 line-clamp-2 leading-relaxed">
                             {service.description}
                           </p>
 
-                          {/* Price + Duration footer */}
                           <div className="flex items-end justify-between pt-4 border-t border-gray-100">
                             <div>
                               <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-0.5">
@@ -1257,7 +1220,6 @@ function BookingPage() {
                           </div>
                         </div>
 
-                        {/* Bottom selection highlight */}
                         {isSelected && (
                           <div
                             className={`h-1 w-full bg-gradient-to-r ${conf.accent}`}
@@ -1293,7 +1255,6 @@ function BookingPage() {
                 </div>
               )}
 
-              {/* Smart Bundle Suggestion */}
               {selectedService &&
                 (() => {
                   const bundleMap = {
@@ -1363,7 +1324,6 @@ function BookingPage() {
                 </div>
               )}
 
-              {/* Step 1 Navigation */}
               <div className="mt-8 flex justify-between items-center">
                 <div className="text-xs text-gray-400">
                   {selectedService ? (
@@ -1391,16 +1351,13 @@ function BookingPage() {
             </div>
           )}
 
-          {/* ─────────────────────────────────────────────────────── */}
-          {/* STEPS 2-4: SIDEBAR + CARD LAYOUT                      */}
-          {/* ─────────────────────────────────────────────────────── */}
           {step > 1 && (
             <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
               <div className="flex flex-col lg:flex-row gap-6">
-                {/* ── Left: Summary sidebar ── */}
+
                 <div className="lg:w-72 xl:w-80 flex-shrink-0">
                   <div className="lg:sticky lg:top-20 space-y-4">
-                    {/* Selected service card */}
+
                     {selectedService && (
                       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                         <div
@@ -1457,7 +1414,6 @@ function BookingPage() {
                       </div>
                     )}
 
-                    {/* Live cost breakdown */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                       <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                         <DollarSign className="w-3.5 h-3.5" />
@@ -1489,7 +1445,6 @@ function BookingPage() {
                       </div>
                     </div>
 
-                    {/* Step progress */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                       <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
                         Progress
@@ -1540,7 +1495,6 @@ function BookingPage() {
                       </div>
                     </div>
 
-                    {/* Smart Insights */}
                     <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl border border-indigo-100 p-5">
                       <div className="flex items-center gap-2 mb-3">
                         <div className="w-7 h-7 bg-indigo-100 rounded-lg flex items-center justify-center">
@@ -1580,7 +1534,6 @@ function BookingPage() {
                       </div>
                     </div>
 
-                    {/* Trust badges */}
                     <div className="hidden lg:block space-y-2">
                       {[
                         {
@@ -1623,10 +1576,9 @@ function BookingPage() {
                   </div>
                 </div>
 
-                {/* ── Right: Main form content ── */}
                 <div className="flex-1 min-w-0">
                   <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                    {/* Step Header */}
+
                     <div className="px-6 sm:px-8 pt-6 pb-4 border-b border-gray-50">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
@@ -1652,7 +1604,7 @@ function BookingPage() {
                     </div>
 
                     <div className="p-6 sm:p-8">
-                      {/* ── Step 2: Vehicle Information ── */}
+
                       {step === 2 && (
                         <div>
                           <p className="text-sm text-gray-500 mb-5">
@@ -1660,7 +1612,6 @@ function BookingPage() {
                             better.
                           </p>
 
-                          {/* Saved vehicle hint */}
                           {showSavedVehicleHint && savedVehicle && (
                             <div className="mb-6 flex items-center gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl px-5 py-4 animate-[fadeInUp_0.3s_ease-out]">
                               <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -1694,7 +1645,7 @@ function BookingPage() {
                           )}
 
                           <div className="grid sm:grid-cols-2 gap-5">
-                            {/* Make with autocomplete */}
+
                             <div ref={makeRef} className="relative">
                               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                                 <Factory className="w-4 h-4 text-blue-500" />
@@ -1742,7 +1693,6 @@ function BookingPage() {
                                 )}
                             </div>
 
-                            {/* Model with autocomplete */}
                             <div ref={modelRef} className="relative">
                               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                                 <Car className="w-4 h-4 text-blue-500" />
@@ -1796,7 +1746,6 @@ function BookingPage() {
                                 )}
                             </div>
 
-                            {/* Year */}
                             <div>
                               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                                 <Calendar className="w-4 h-4 text-blue-500" />
@@ -1820,7 +1769,6 @@ function BookingPage() {
                               )}
                             </div>
 
-                            {/* License Plate */}
                             <div>
                               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                                 <Hash className="w-4 h-4 text-blue-500" />
@@ -1875,7 +1823,7 @@ function BookingPage() {
                                 placeholder="e.g. Silver"
                                 className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 hover:border-gray-300 focus:outline-none transition-all duration-200 text-sm"
                               />
-                              {/* Quick color picks */}
+
                               <div className="flex items-center gap-1.5 px-2">
                                 {[
                                   { color: "bg-gray-800", name: "Black" },
@@ -1911,7 +1859,6 @@ function BookingPage() {
                             </div>
                           </div>
 
-                          {/* Vehicle preview card */}
                           {formData.vehicleInfo.make &&
                             formData.vehicleInfo.model && (
                               <div className="mt-6 bg-gradient-to-r from-gray-50 to-blue-50/50 rounded-xl p-4 border border-gray-100 animate-[fadeInUp_0.3s_ease-out]">
@@ -1948,14 +1895,12 @@ function BookingPage() {
                         </div>
                       )}
 
-                      {/* ── Step 3: Date & Time ── */}
                       {step === 3 && (
                         <div>
                           <p className="text-sm text-gray-500 mb-6">
                             Pick a date and time that works best for you.
                           </p>
 
-                          {/* Smart date picker */}
                           <div className="mb-6">
                             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
                               <CalendarClock className="w-4 h-4 text-blue-500" />
@@ -2020,7 +1965,6 @@ function BookingPage() {
                               ))}
                             </div>
 
-                            {/* Fallback date input */}
                             <div className="mt-3 flex items-center gap-2">
                               <span className="text-xs text-gray-400">
                                 or pick a specific date:
@@ -2046,7 +1990,6 @@ function BookingPage() {
                             )}
                           </div>
 
-                          {/* Smart Scheduling Insight */}
                           {selectedService && formData.bookingDate && (
                             <div className="mb-5 flex items-start gap-3 bg-gradient-to-r from-cyan-50 to-blue-50 border border-cyan-200/60 rounded-xl px-5 py-3.5 animate-[fadeInUp_0.3s_ease-out]">
                               <Sparkles className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
@@ -2068,14 +2011,12 @@ function BookingPage() {
                             </div>
                           )}
 
-                          {/* Time slots with popularity */}
                           <div>
                             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
                               <Clock className="w-4 h-4 text-blue-500" />
                               Select Time Slot
                             </label>
 
-                            {/* Popularity legend */}
                             <div className="flex items-center gap-4 mb-3">
                               {Object.entries(popularityColors).map(
                                 ([key, val]) => (
@@ -2153,7 +2094,6 @@ function BookingPage() {
                             )}
                           </div>
 
-                          {/* Estimated completion */}
                           {formData.bookingDate &&
                             formData.timeSlot &&
                             selectedService && (
@@ -2178,7 +2118,6 @@ function BookingPage() {
                               </div>
                             )}
 
-                          {/* Notes */}
                           <div className="mt-6">
                             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                               <StickyNote className="w-4 h-4 text-blue-500" />
@@ -2202,7 +2141,6 @@ function BookingPage() {
                         </div>
                       )}
 
-                      {/* ── Step 4: Review ── */}
                       {step === 4 && (
                         <div>
                           <p className="text-sm text-gray-500 mb-6">
@@ -2211,7 +2149,7 @@ function BookingPage() {
                           </p>
 
                           <div className="grid md:grid-cols-2 gap-4 mb-6">
-                            {/* Service */}
+
                             <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-100 hover:shadow-md transition-shadow">
                               <div className="flex items-center gap-2 mb-3">
                                 <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center">
@@ -2236,7 +2174,6 @@ function BookingPage() {
                               </div>
                             </div>
 
-                            {/* Vehicle */}
                             <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 hover:shadow-md transition-shadow">
                               <div className="flex items-center gap-2 mb-3">
                                 <div className="w-9 h-9 bg-gray-200 rounded-xl flex items-center justify-center">
@@ -2260,7 +2197,6 @@ function BookingPage() {
                               </p>
                             </div>
 
-                            {/* Appointment */}
                             <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 hover:shadow-md transition-shadow">
                               <div className="flex items-center gap-2 mb-3">
                                 <div className="w-9 h-9 bg-gray-200 rounded-xl flex items-center justify-center">
@@ -2286,7 +2222,6 @@ function BookingPage() {
                               </p>
                             </div>
 
-                            {/* Notes */}
                             {formData.notes && (
                               <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 hover:shadow-md transition-shadow">
                                 <div className="flex items-center gap-2 mb-3">
@@ -2304,7 +2239,6 @@ function BookingPage() {
                             )}
                           </div>
 
-                          {/* Cost summary */}
                           <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 text-white mb-6">
                             <div className="flex items-center gap-2 mb-4">
                               <DollarSign className="w-5 h-5 text-blue-400" />
@@ -2340,7 +2274,6 @@ function BookingPage() {
                             </div>
                           </div>
 
-                          {/* Booking Confidence Score */}
                           {(() => {
                             let score = 0;
                             const checks = [];
@@ -2452,7 +2385,6 @@ function BookingPage() {
                             );
                           })()}
 
-                          {/* Confirmation notice */}
                           <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100 flex items-start gap-3">
                             <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                             <div>
@@ -2470,7 +2402,6 @@ function BookingPage() {
                       )}
                     </div>
 
-                    {/* Navigation */}
                     <div className="px-6 sm:px-8 pb-6 sm:pb-8">
                       <div className="flex gap-3 justify-between pt-5 border-t border-gray-100">
                         <button
@@ -2540,7 +2471,6 @@ function BookingPage() {
         </div>
       </form>
 
-      {/* ═══ FOOTER ═══ */}
       <footer className="bg-gray-900 text-gray-400 mt-auto">
         <div className="lg:hidden border-b border-gray-800">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-5">
@@ -2588,7 +2518,6 @@ function BookingPage() {
         </div>
       </footer>
 
-      {/* ═══ GLOBAL STYLES ═══ */}
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(16px); }

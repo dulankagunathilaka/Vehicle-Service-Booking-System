@@ -7,7 +7,6 @@ const crypto = require('crypto');
 
 const router = express.Router();
 
-// ─── Card Detection ────────────────────────────────────────────
 function detectCardBrand(number) {
   const n = number.replace(/\s/g, '');
   if (/^4/.test(n)) return 'visa';
@@ -17,7 +16,6 @@ function detectCardBrand(number) {
   return 'unknown';
 }
 
-// Luhn algorithm validation
 function isValidCardNumber(number) {
   const n = number.replace(/\s/g, '');
   if (!/^\d{13,19}$/.test(n)) return false;
@@ -35,14 +33,12 @@ function isValidCardNumber(number) {
   return sum % 10 === 0;
 }
 
-// Validate expiry
 function isValidExpiry(month, year) {
   const now = new Date();
-  const expDate = new Date(year, month, 0); // last day of expiry month
+  const expDate = new Date(year, month, 0);
   return expDate > now;
 }
 
-// ─── Get my saved cards ────────────────────────────────────────
 router.get('/cards', protect, async (req, res) => {
   try {
     const cards = await PaymentCard.find({ userId: req.user.id }).sort({ isDefault: -1, createdAt: -1 });
@@ -52,12 +48,10 @@ router.get('/cards', protect, async (req, res) => {
   }
 });
 
-// ─── Add a card ────────────────────────────────────────────────
 router.post('/cards', protect, async (req, res) => {
   try {
     const { cardNumber, cardholderName, expiryMonth, expiryYear, cvv, setDefault } = req.body;
 
-    // Validate inputs
     if (!cardNumber || !cardholderName || !expiryMonth || !expiryYear || !cvv) {
       return res.status(400).json({ success: false, message: 'All card fields are required' });
     }
@@ -80,21 +74,17 @@ router.post('/cards', protect, async (req, res) => {
     const brand = detectCardBrand(cleanNumber);
     const lastFour = cleanNumber.slice(-4);
 
-    // Check for duplicate
     const existing = await PaymentCard.findOne({ userId: req.user.id, lastFour, brand });
     if (existing) {
       return res.status(400).json({ success: false, message: 'This card is already saved' });
     }
 
-    // Create a simulated payment token (in production, use Stripe tokenization)
     const paymentToken = `tok_${crypto.randomBytes(16).toString('hex')}`;
 
-    // If setting as default, unset current default
     if (setDefault) {
       await PaymentCard.updateMany({ userId: req.user.id }, { isDefault: false });
     }
 
-    // If first card, make it default
     const cardCount = await PaymentCard.countDocuments({ userId: req.user.id });
 
     const card = await PaymentCard.create({
@@ -114,7 +104,6 @@ router.post('/cards', protect, async (req, res) => {
   }
 });
 
-// ─── Set default card ──────────────────────────────────────────
 router.put('/cards/:id/default', protect, async (req, res) => {
   try {
     const card = await PaymentCard.findById(req.params.id);
@@ -133,7 +122,6 @@ router.put('/cards/:id/default', protect, async (req, res) => {
   }
 });
 
-// ─── Delete card ───────────────────────────────────────────────
 router.delete('/cards/:id', protect, async (req, res) => {
   try {
     const card = await PaymentCard.findById(req.params.id);
@@ -145,7 +133,6 @@ router.delete('/cards/:id', protect, async (req, res) => {
     const wasDefault = card.isDefault;
     await card.deleteOne();
 
-    // If deleted card was default, set another as default
     if (wasDefault) {
       const next = await PaymentCard.findOne({ userId: req.user.id }).sort({ createdAt: -1 });
       if (next) {
@@ -160,7 +147,6 @@ router.delete('/cards/:id', protect, async (req, res) => {
   }
 });
 
-// ─── Pay invoice with card ─────────────────────────────────────
 router.post('/pay/:invoiceId', protect, async (req, res) => {
   try {
     const { cardId } = req.body;
@@ -179,7 +165,6 @@ router.post('/pay/:invoiceId', protect, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Cannot pay a cancelled invoice' });
     }
 
-    // Validate card
     const card = await PaymentCard.findById(cardId);
     if (!card) {
       return res.status(404).json({ success: false, message: 'Payment card not found' });
@@ -191,16 +176,13 @@ router.post('/pay/:invoiceId', protect, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Card has expired. Please use a different card.' });
     }
 
-    // Simulate payment processing (in production, call Stripe/PayPal API)
     const transactionId = `txn_${crypto.randomBytes(12).toString('hex')}`;
 
-    // Mark invoice as paid
     invoice.status = 'paid';
     invoice.paymentMethod = 'card';
     invoice.paidAt = new Date();
     await invoice.save();
 
-    // Send payment confirmation
     try {
       const tmpl = templates.paymentReceived(invoice);
       await sendNotification({

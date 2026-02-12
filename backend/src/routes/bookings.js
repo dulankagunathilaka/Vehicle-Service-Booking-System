@@ -6,10 +6,67 @@ const { sendNotification, templates } = require('../services/notificationService
 
 const router = express.Router();
 
-// Create booking (customers only)
+router.get('/available-slots', protect, async (req, res) => {
+  try {
+    const { date } = req.query;
+    if (!date) {
+      return res.status(400).json({ success: false, message: 'Date is required' });
+    }
+
+    const bookingDate = new Date(date);
+
+    const allSlots = [
+      '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM',
+      '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM',
+      '04:00 PM', '05:00 PM',
+    ];
+
+    const bookedSlots = await Booking.find({
+      bookingDate,
+      status: { $nin: ['cancelled'] },
+    }).select('timeSlot');
+
+    const bookedSlotNames = bookedSlots.map(b => b.timeSlot);
+    const availableSlots = allSlots.filter(slot => !bookedSlotNames.includes(slot));
+
+    res.status(200).json({
+      success: true,
+      date: bookingDate,
+      allSlots,
+      bookedSlots: bookedSlotNames,
+      availableSlots,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 router.post('/', protect, authorize('customer'), async (req, res) => {
   try {
     const { serviceId, vehicleInfo, bookingDate, timeSlot, notes, totalPrice } = req.body;
+
+    const bookingDateObj = new Date(bookingDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (bookingDateObj < today) {
+      return res.status(400).json({
+        success: false,
+        message: 'Booking date must be in the future',
+      });
+    }
+
+    const existingBooking = await Booking.findOne({
+      bookingDate: bookingDateObj,
+      timeSlot,
+      status: { $nin: ['cancelled'] },
+    });
+
+    if (existingBooking) {
+      return res.status(400).json({
+        success: false,
+        message: `Time slot ${timeSlot} on ${bookingDateObj.toLocaleDateString()} is already booked. Please choose another time.`,
+      });
+    }
 
     const booking = await Booking.create({
       customerId: req.user.id,
@@ -27,7 +84,6 @@ router.post('/', protect, authorize('customer'), async (req, res) => {
       data: booking,
     });
 
-    // Send booking confirmation notification
     try {
       const tmpl = templates.bookingConfirmation(booking, req.body.serviceName || 'Vehicle Service');
       await sendNotification({
@@ -47,7 +103,6 @@ router.post('/', protect, authorize('customer'), async (req, res) => {
   }
 });
 
-// Customer dashboard stats
 router.get('/dashboard-stats', protect, authorize('customer'), async (req, res) => {
   try {
     const userId = req.user.id;
@@ -66,21 +121,17 @@ router.get('/dashboard-stats', protect, authorize('customer'), async (req, res) 
 
     const now = new Date();
 
-    // Basic counts
     const totalBookings = bookings.length;
     const activeBookings = bookings.filter(b => ['pending', 'confirmed', 'in-progress'].includes(b.status));
     const completedBookings = bookings.filter(b => b.status === 'completed');
     const cancelledBookings = bookings.filter(b => b.status === 'cancelled');
 
-    // Upcoming bookings (future date, not cancelled)
     const upcomingBookings = bookings
       .filter(b => new Date(b.bookingDate) >= now && !['cancelled', 'completed'].includes(b.status))
       .sort((a, b) => new Date(a.bookingDate) - new Date(b.bookingDate));
 
-    // Recent completed (last 5)
     const recentCompleted = completedBookings.slice(0, 5);
 
-    // Spending
     const totalSpent = invoices
       .filter(inv => inv.status === 'paid')
       .reduce((sum, inv) => sum + inv.totalAmount, 0);
@@ -89,7 +140,6 @@ router.get('/dashboard-stats', protect, authorize('customer'), async (req, res) 
       .filter(inv => ['draft', 'sent', 'overdue'].includes(inv.status))
       .reduce((sum, inv) => sum + inv.totalAmount, 0);
 
-    // Monthly spending (last 6 months)
     const monthlySpending = [];
     for (let i = 5; i >= 0; i--) {
       const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -104,7 +154,6 @@ router.get('/dashboard-stats', protect, authorize('customer'), async (req, res) 
       });
     }
 
-    // Vehicle garage — unique vehicles from bookings
     const vehicleMap = new Map();
     bookings.forEach(b => {
       if (b.vehicleInfo && b.vehicleInfo.licensePlate) {
@@ -127,7 +176,6 @@ router.get('/dashboard-stats', protect, authorize('customer'), async (req, res) 
     });
     const vehicles = Array.from(vehicleMap.values());
 
-    // Service frequency (most booked services)
     const serviceFreq = {};
     bookings.forEach(b => {
       if (b.serviceId) {
@@ -138,7 +186,6 @@ router.get('/dashboard-stats', protect, authorize('customer'), async (req, res) 
     });
     const topServices = Object.values(serviceFreq).sort((a, b) => b.count - a.count).slice(0, 5);
 
-    // Next suggested service date (3 months after last completed)
     let nextServiceSuggestion = null;
     if (recentCompleted.length > 0) {
       const lastDate = new Date(recentCompleted[0].bookingDate);
@@ -174,7 +221,6 @@ router.get('/dashboard-stats', protect, authorize('customer'), async (req, res) 
   }
 });
 
-// Get my bookings (customers)
 router.get('/my-bookings', protect, authorize('customer'), async (req, res) => {
   try {
     const bookings = await Booking.find({ customerId: req.user.id })
@@ -194,7 +240,6 @@ router.get('/my-bookings', protect, authorize('customer'), async (req, res) => {
   }
 });
 
-// Get all bookings (admin only)
 router.get('/', protect, authorize('admin'), async (req, res) => {
   try {
     const bookings = await Booking.find()
@@ -215,7 +260,6 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// Get single booking
 router.get('/:id', protect, async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
@@ -229,7 +273,6 @@ router.get('/:id', protect, async (req, res) => {
       });
     }
 
-    // Check authorization
     if (req.user.role === 'customer' && booking.customerId._id.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
@@ -249,7 +292,6 @@ router.get('/:id', protect, async (req, res) => {
   }
 });
 
-// Update booking status (admin only)
 router.put('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const { status, note, priority, assignedTech } = req.body;
@@ -267,7 +309,6 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
         note: note || `Status changed to ${status}`,
       });
 
-      // Send status update notification
       try {
         const tmpl = templates.bookingUpdate(booking, status);
         await sendNotification({
@@ -280,7 +321,6 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
         console.error('Notification error:', notifErr.message);
       }
 
-      // Auto-generate invoice when service is completed
       if (status === 'completed') {
         try {
           const existingInvoice = await Invoice.findOne({ bookingId: booking._id });
@@ -312,11 +352,10 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
               taxAmount,
               discount: 0,
               totalAmount,
-              dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+              dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
               status: 'sent',
             });
 
-            // Notify customer about the invoice
             try {
               const invTmpl = templates.invoiceSent(invoice);
               await sendNotification({
@@ -348,7 +387,6 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// Cancel booking (customer or admin)
 router.delete('/:id', protect, async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id);
@@ -360,7 +398,6 @@ router.delete('/:id', protect, async (req, res) => {
       });
     }
 
-    // Check authorization
     if (req.user.role === 'customer' && booking.customerId.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
@@ -368,8 +405,32 @@ router.delete('/:id', protect, async (req, res) => {
       });
     }
 
+    if (['completed', 'cancelled'].includes(booking.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot cancel a booking that is already ${booking.status}`,
+      });
+    }
+
     booking.status = 'cancelled';
+    booking.statusHistory.push({
+      status: 'cancelled',
+      timestamp: new Date(),
+      note: `Cancelled by ${req.user.role}`,
+    });
     await booking.save();
+
+    try {
+      const tmpl = templates.bookingCancelled(booking);
+      await sendNotification({
+        recipientId: booking.customerId,
+        type: 'both',
+        ...tmpl,
+        relatedBooking: booking._id,
+      });
+    } catch (notifErr) {
+      console.error('Cancellation notification error:', notifErr.message);
+    }
 
     res.status(200).json({
       success: true,

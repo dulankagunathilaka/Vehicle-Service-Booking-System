@@ -4,10 +4,8 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// All inventory routes require admin
 router.use(protect, authorize('admin'));
 
-// Get all inventory items
 router.get('/', async (req, res) => {
   try {
     const items = await InventoryItem.find().sort({ category: 1, name: 1 });
@@ -17,7 +15,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Create inventory item
 router.post('/', async (req, res) => {
   try {
     const { name, category, description, quantity, minQuantity, unitPrice, costPrice, supplier, location } = req.body;
@@ -40,7 +37,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update inventory item
 router.put('/:id', async (req, res) => {
   try {
     const item = await InventoryItem.findById(req.params.id);
@@ -60,7 +56,6 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Restock item
 router.post('/:id/restock', async (req, res) => {
   try {
     const { quantity, costPerUnit, supplier, note } = req.body;
@@ -80,7 +75,6 @@ router.post('/:id/restock', async (req, res) => {
   }
 });
 
-// Use item (deduct from inventory)
 router.post('/:id/use', async (req, res) => {
   try {
     const { quantityUsed, bookingId, note } = req.body;
@@ -102,7 +96,6 @@ router.post('/:id/use', async (req, res) => {
   }
 });
 
-// Delete item
 router.delete('/:id', async (req, res) => {
   try {
     const item = await InventoryItem.findById(req.params.id);
@@ -116,7 +109,6 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// Inventory stats
 router.get('/stats/summary', async (req, res) => {
   try {
     const totalItems = await InventoryItem.countDocuments();

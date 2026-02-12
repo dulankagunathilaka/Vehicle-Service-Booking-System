@@ -229,7 +229,7 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-      {/* Mobile overlay */}
+
       {mobileOpen && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
@@ -237,13 +237,12 @@ export default function AdminLayout({ children }) {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`fixed lg:static inset-y-0 left-0 z-50 flex flex-col bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 text-white transition-all duration-300 ${
           collapsed ? "w-[72px]" : "w-64"
         } ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
-        {/* Logo */}
+
         <div className="h-16 flex items-center px-4 border-b border-white/10 flex-shrink-0">
           {collapsed ? (
             <span className="text-lg font-extrabold text-white mx-auto">
@@ -261,7 +260,6 @@ export default function AdminLayout({ children }) {
           )}
         </div>
 
-        {/* Quick nav to site */}
         <div className="px-3 pt-4 pb-2">
           {!collapsed && (
             <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold px-3 mb-2">
@@ -278,7 +276,6 @@ export default function AdminLayout({ children }) {
           </button>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 py-2 px-3 space-y-1 overflow-y-auto">
           {!collapsed && (
             <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold px-3 mb-2 mt-1">
@@ -317,7 +314,6 @@ export default function AdminLayout({ children }) {
           })}
         </nav>
 
-        {/* Status indicator */}
         {!collapsed && (
           <div className="mx-3 mb-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
             <div className="flex items-center gap-2 mb-1">
@@ -332,7 +328,6 @@ export default function AdminLayout({ children }) {
           </div>
         )}
 
-        {/* User & collapse */}
         <div className="border-t border-white/10 p-3 space-y-2 flex-shrink-0">
           {!collapsed && (
             <div className="px-3 py-2 flex items-center gap-3">
@@ -371,9 +366,8 @@ export default function AdminLayout({ children }) {
         </div>
       </aside>
 
-      {/* Main content area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
+
         <header className="h-14 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center px-4 lg:px-6 sticky top-0 z-30">
           <button
             onClick={() => setMobileOpen(true)}
@@ -382,7 +376,6 @@ export default function AdminLayout({ children }) {
             <Menu className="w-5 h-5 text-gray-600" />
           </button>
 
-          {/* Back button */}
           {canGoBack && (
             <button
               onClick={() => navigate("/admin")}
@@ -393,7 +386,6 @@ export default function AdminLayout({ children }) {
             </button>
           )}
 
-          {/* Breadcrumbs */}
           <nav className="flex items-center gap-1.5 text-xs flex-1 min-w-0">
             {crumbs.map((c, i) => (
               <span key={i} className="flex items-center gap-1.5">
@@ -412,9 +404,8 @@ export default function AdminLayout({ children }) {
             ))}
           </nav>
 
-          {/* Right side */}
           <div className="flex items-center gap-2">
-            {/* Live clock */}
+
             <span className="hidden md:block text-[11px] text-gray-400 font-medium tabular-nums mr-2">
               {new Date().toLocaleDateString("en-US", {
                 weekday: "short",
@@ -423,7 +414,6 @@ export default function AdminLayout({ children }) {
               })}
             </span>
 
-            {/* Notifications */}
             <div className="relative">
               <button
                 onClick={() => {
@@ -447,7 +437,7 @@ export default function AdminLayout({ children }) {
                     onClick={() => setShowNotifPanel(false)}
                   />
                   <div className="absolute right-0 top-full mt-1 w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
-                    {/* Header */}
+
                     <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <h3 className="text-sm font-bold text-gray-900">
@@ -477,7 +467,6 @@ export default function AdminLayout({ children }) {
                       </div>
                     </div>
 
-                    {/* List */}
                     <div className="max-h-[400px] overflow-y-auto">
                       {notifications.length === 0 ? (
                         <div className="text-center py-10">
@@ -550,7 +539,6 @@ export default function AdminLayout({ children }) {
                       )}
                     </div>
 
-                    {/* Footer */}
                     <div className="border-t border-gray-100 px-4 py-2.5">
                       <button
                         onClick={() => {
@@ -567,7 +555,6 @@ export default function AdminLayout({ children }) {
               )}
             </div>
 
-            {/* User dropdown */}
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
@@ -618,7 +605,6 @@ export default function AdminLayout({ children }) {
           </div>
         </header>
 
-        {/* Page content */}
         <main className="flex-1 p-4 lg:p-6 overflow-y-auto">{children}</main>
       </div>
     </div>

@@ -23,10 +23,8 @@ export default function Navbar({ transparent = false }) {
 
   const isHome = location.pathname === "/";
 
-  // Only allow transparent mode on the homepage
   const useTransparent = transparent && isHome;
 
-  // Scroll detection
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 30);
@@ -48,7 +46,6 @@ export default function Navbar({ transparent = false }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, [isHome]);
 
-  // Close on Escape
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") {
@@ -60,7 +57,6 @@ export default function Navbar({ transparent = false }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // Lock body when mobile menu open
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => {
@@ -68,7 +64,6 @@ export default function Navbar({ transparent = false }) {
     };
   }, [mobileOpen]);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
     setShowUserMenu(false);
@@ -108,7 +103,6 @@ export default function Navbar({ transparent = false }) {
     { label: "About", href: "/learn-more" },
   ];
 
-  // On non-home pages, always show solid style (scrolled=true look)
   const solid = !useTransparent || scrolled;
 
   return (
@@ -120,7 +114,7 @@ export default function Navbar({ transparent = false }) {
             : "bg-transparent"
         }`}
       >
-        {/* Gradient accent line */}
+
         <div
           className={`h-[2px] bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-500 transition-opacity duration-500 ${
             solid ? "opacity-100" : "opacity-0"
@@ -128,7 +122,7 @@ export default function Navbar({ transparent = false }) {
         />
 
         <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 lg:h-[68px]">
-          {/* ── Logo ── */}
+
           <button
             onClick={() => goTo("/")}
             className="flex items-center group shrink-0"
@@ -147,7 +141,6 @@ export default function Navbar({ transparent = false }) {
             </h1>
           </button>
 
-          {/* ── Center nav links (desktop) ── */}
           <div className="hidden md:flex items-center">
             <div
               className={`flex items-center gap-0.5 p-1 rounded-full transition-all duration-300 ${
@@ -181,10 +174,9 @@ export default function Navbar({ transparent = false }) {
             </div>
           </div>
 
-          {/* ── Right side ── */}
           <div className="flex items-center gap-2">
             {isAuthenticated ? (
-              /* ── User avatar dropdown ── */
+
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
@@ -211,7 +203,6 @@ export default function Navbar({ transparent = false }) {
                   />
                 </button>
 
-                {/* Dropdown */}
                 <div
                   className={`absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-xl shadow-black/8 border border-gray-200/80 overflow-hidden transition-all duration-200 origin-top-right ${
                     showUserMenu
@@ -219,7 +210,7 @@ export default function Navbar({ transparent = false }) {
                       : "opacity-0 scale-95 pointer-events-none"
                   }`}
                 >
-                  {/* User header */}
+
                   <div className="px-4 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600">
                     <div className="flex items-center gap-2.5">
                       <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white font-bold text-sm border border-white/30">
@@ -235,7 +226,7 @@ export default function Navbar({ transparent = false }) {
                       </div>
                     </div>
                   </div>
-                  {/* Items */}
+
                   <div className="p-1.5">
                     <button
                       onClick={() => goTo(isAdmin ? "/admin" : "/dashboard")}
@@ -281,7 +272,7 @@ export default function Navbar({ transparent = false }) {
                 )}
               </div>
             ) : (
-              /* ── Guest ── */
+
               <div className="hidden md:flex items-center gap-2">
                 <button
                   onClick={() => goTo("/signin")}
@@ -306,7 +297,6 @@ export default function Navbar({ transparent = false }) {
               </div>
             )}
 
-            {/* Mobile toggle */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className={`md:hidden p-2 rounded-lg transition-colors duration-300 ${
@@ -324,7 +314,6 @@ export default function Navbar({ transparent = false }) {
           </div>
         </nav>
 
-        {/* ── Mobile menu ── */}
         <div
           className={`md:hidden fixed inset-x-0 top-[calc(4rem+2px)] bottom-0 z-40 transition-all duration-300 ${
             mobileOpen ? "opacity-100 visible" : "opacity-0 invisible"
@@ -414,7 +403,6 @@ export default function Navbar({ transparent = false }) {
         </div>
       </header>
 
-      {/* Spacer to prevent content from hiding behind fixed navbar */}
       {!useTransparent && <div className="h-16 lg:h-[70px]" />}
     </>
   );

@@ -327,7 +327,7 @@ function FAQItem({ question, answer, index }) {
 function LearnMore() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* Hero */}
+
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900" />
         <div className="absolute inset-0 opacity-10">
@@ -369,7 +369,6 @@ function LearnMore() {
         </div>
       </section>
 
-      {/* How It Works */}
       <section id="how-it-works" className="py-24 px-4 bg-white">
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-20">
@@ -388,7 +387,7 @@ function LearnMore() {
           <div className="grid md:grid-cols-4 gap-6">
             {steps.map((item, index) => (
               <div key={item.step} className="relative group">
-                {/* Connector line */}
+
                 {index < steps.length - 1 && (
                   <div className="hidden md:block absolute top-10 left-[60%] w-[80%] h-[2px] bg-gradient-to-r from-blue-200 to-transparent z-0" />
                 )}
@@ -413,7 +412,6 @@ function LearnMore() {
         </div>
       </section>
 
-      {/* Services */}
       <section id="services" className="py-24 px-4 bg-gray-50">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-20">
@@ -466,7 +464,6 @@ function LearnMore() {
         </div>
       </section>
 
-      {/* Why AutoServe */}
       <section className="py-24 px-4 bg-white">
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-20">
@@ -504,7 +501,6 @@ function LearnMore() {
         </div>
       </section>
 
-      {/* Testimonials */}
       <section id="testimonials" className="py-24 px-4 bg-gray-50">
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-20">
@@ -557,7 +553,6 @@ function LearnMore() {
         </div>
       </section>
 
-      {/* FAQ */}
       <section id="faq" className="py-24 px-4 bg-white">
         <div className="container mx-auto max-w-3xl">
           <div className="text-center mb-16">
@@ -585,7 +580,165 @@ function LearnMore() {
         </div>
       </section>
 
-      {/* CTA */}
+      <section id="privacy" className="py-24 px-4 bg-gray-50">
+        <div className="container mx-auto max-w-3xl">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-blue-600 tracking-wider uppercase mb-3">
+              Legal
+            </p>
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Privacy Policy
+            </h3>
+            <p className="text-lg text-gray-500">Last updated: February 2026</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 p-8 md:p-10 shadow-sm space-y-6 text-sm text-gray-600 leading-relaxed">
+            <div>
+              <h4 className="text-base font-bold text-gray-900 mb-2">
+                1. Information We Collect
+              </h4>
+              <p>
+                We collect personal information you provide when creating an
+                account, including your name, email address, phone number, and
+                vehicle details. We also collect booking history, payment
+                information, and usage data to improve our services.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-gray-900 mb-2">
+                2. How We Use Your Information
+              </h4>
+              <p>
+                Your information is used to process bookings, send service
+                updates and notifications, process payments, improve our
+                platform, and communicate important changes. We never sell your
+                personal data to third parties.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-gray-900 mb-2">
+                3. Data Security
+              </h4>
+              <p>
+                We implement industry-standard security measures including
+                encrypted data transmission (SSL/TLS), secure password hashing,
+                and regular security audits to protect your information from
+                unauthorized access.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-gray-900 mb-2">
+                4. Cookies & Tracking
+              </h4>
+              <p>
+                We use essential cookies to maintain your session and
+                preferences. Analytics cookies help us understand how you use
+                AutoServe so we can improve the experience. You can manage
+                cookie preferences in your browser settings.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-gray-900 mb-2">
+                5. Your Rights
+              </h4>
+              <p>
+                You have the right to access, update, or delete your personal
+                data at any time through your account settings or by contacting
+                our support team at{" "}
+                <a
+                  href="mailto:support@autoserve.com"
+                  className="text-blue-600 hover:underline"
+                >
+                  support@autoserve.com
+                </a>
+                .
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="terms" className="py-24 px-4 bg-white">
+        <div className="container mx-auto max-w-3xl">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-blue-600 tracking-wider uppercase mb-3">
+              Legal
+            </p>
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Terms of Service
+            </h3>
+            <p className="text-lg text-gray-500">Last updated: February 2026</p>
+          </div>
+          <div className="bg-gray-50 rounded-2xl border border-gray-100 p-8 md:p-10 shadow-sm space-y-6 text-sm text-gray-600 leading-relaxed">
+            <div>
+              <h4 className="text-base font-bold text-gray-900 mb-2">
+                1. Acceptance of Terms
+              </h4>
+              <p>
+                By accessing or using AutoServe, you agree to be bound by these
+                Terms of Service. If you do not agree, please do not use our
+                platform. We reserve the right to update these terms at any time
+                with notice.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-gray-900 mb-2">
+                2. Account Responsibilities
+              </h4>
+              <p>
+                You are responsible for maintaining the confidentiality of your
+                account credentials. You agree to provide accurate information
+                and to update it promptly. Unauthorized use of your account
+                should be reported to us immediately.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-gray-900 mb-2">
+                3. Booking & Cancellation
+              </h4>
+              <p>
+                Bookings are confirmed upon submission and subject to
+                availability. Cancellations made at least 24 hours before the
+                scheduled service are free of charge. Late cancellations or
+                no-shows may incur a fee as outlined during booking.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-gray-900 mb-2">
+                4. Payments & Pricing
+              </h4>
+              <p>
+                All prices are displayed in the applicable currency and include
+                standard service fees. Payment is processed securely through our
+                payment partners. Refunds are handled on a case-by-case basis
+                within 7 business days.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-gray-900 mb-2">
+                5. Service Guarantee
+              </h4>
+              <p>
+                All services are performed by certified mechanics. We stand
+                behind the quality of our work with a satisfaction guarantee. If
+                you're not satisfied, contact us within 48 hours of service
+                completion for resolution.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-gray-900 mb-2">
+                6. Limitation of Liability
+              </h4>
+              <p>
+                AutoServe acts as a platform connecting vehicle owners with
+                service providers. While we ensure quality standards, our
+                liability is limited to the service fees paid. We are not liable
+                for indirect or consequential damages.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900" />
         <div className="absolute inset-0 opacity-10">
@@ -618,7 +771,6 @@ function LearnMore() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 py-14 px-4">
         <div className="container mx-auto max-w-5xl">
           <div className="grid md:grid-cols-4 gap-8 mb-10">
@@ -644,13 +796,18 @@ function LearnMore() {
                   </a>
                 </li>
                 <li>
-                  <a href="#services" className="hover:text-white transition">
+                  <a href="/#services" className="hover:text-white transition">
                     Services
                   </a>
                 </li>
                 <li>
                   <a href="#faq" className="hover:text-white transition">
                     FAQ
+                  </a>
+                </li>
+                <li>
+                  <a href="/booking" className="hover:text-white transition">
+                    Book Now
                   </a>
                 </li>
               </ul>
@@ -661,17 +818,20 @@ function LearnMore() {
               </h5>
               <ul className="text-sm space-y-2.5">
                 <li>
-                  <a href="#" className="hover:text-white transition">
+                  <a href="#privacy" className="hover:text-white transition">
                     Privacy Policy
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition">
+                  <a href="#terms" className="hover:text-white transition">
                     Terms of Service
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition">
+                  <a
+                    href="mailto:support@autoserve.com"
+                    className="hover:text-white transition"
+                  >
                     Support
                   </a>
                 </li>
@@ -681,8 +841,18 @@ function LearnMore() {
               <h5 className="text-white font-semibold mb-4 text-sm tracking-wider uppercase">
                 Contact
               </h5>
-              <p className="text-sm mb-1">support@autoserve.com</p>
-              <p className="text-sm">+1 (555) 123-4567</p>
+              <a
+                href="mailto:support@autoserve.com"
+                className="text-sm block mb-2 hover:text-white transition"
+              >
+                support@autoserve.com
+              </a>
+              <a
+                href="tel:+94705283688"
+                className="text-sm block hover:text-white transition"
+              >
+                +94 70 528 3688
+              </a>
             </div>
           </div>
 

@@ -2,14 +2,12 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const Service = require('./src/models/Service');
+const User = require('./src/models/User');
 
 const connectDB = async () => {
   try {
     const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/autoserve';
-    await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(uri);
     console.log('MongoDB connected successfully');
   } catch (error) {
     console.error('MongoDB connection error:', error.message);
@@ -102,11 +100,9 @@ const seedServices = async () => {
   ];
 
   try {
-    // Clear existing services
     await Service.deleteMany({});
     console.log('Cleared existing services');
 
-    // Insert new services
     const createdServices = await Service.insertMany(services);
     console.log(`Successfully created ${createdServices.length} services:`);
     createdServices.forEach((service) => {
@@ -117,8 +113,33 @@ const seedServices = async () => {
   }
 };
 
+const seedAdmin = async () => {
+  try {
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@autoserve.com';
+    const existingAdmin = await User.findOne({ email: adminEmail });
+
+    if (existingAdmin) {
+      console.log(`Admin user already exists: ${adminEmail}`);
+      return;
+    }
+
+    const admin = await User.create({
+      name: process.env.ADMIN_NAME || 'Admin',
+      email: adminEmail,
+      password: process.env.ADMIN_PASSWORD || 'admin123',
+      phone: process.env.ADMIN_PHONE || '0000000000',
+      role: 'admin',
+    });
+
+    console.log(`Admin user created: ${admin.email}`);
+  } catch (error) {
+    console.error('Error seeding admin user:', error.message);
+  }
+};
+
 const main = async () => {
   await connectDB();
+  await seedAdmin();
   await seedServices();
   await mongoose.connection.close();
   console.log('Database connection closed');

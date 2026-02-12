@@ -7,10 +7,8 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// All routes require admin
 router.use(protect, authorize('admin'));
 
-// Dashboard stats
 router.get('/stats', async (req, res) => {
   try {
     const totalBookings = await Booking.countDocuments();
@@ -23,14 +21,12 @@ router.get('/stats', async (req, res) => {
     const totalServices = await Service.countDocuments();
     const activeServices = await Service.countDocuments({ isAvailable: true });
 
-    // Revenue from completed bookings
     const revenueResult = await Booking.aggregate([
       { $match: { status: { $in: ['completed', 'confirmed', 'in-progress'] } } },
       { $group: { _id: null, total: { $sum: '$totalPrice' } } },
     ]);
     const totalRevenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
 
-    // Recent bookings (last 5)
     const recentBookings = await Booking.find()
       .populate('customerId', 'name email')
       .populate('serviceId', 'name price')
@@ -58,14 +54,12 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-// Get all customers
 router.get('/customers', async (req, res) => {
   try {
     const customers = await User.find({ role: 'customer' })
       .select('-password')
       .sort({ createdAt: -1 });
 
-    // Get booking counts per customer
     const customerIds = customers.map((c) => c._id);
     const bookingCounts = await Booking.aggregate([
       { $match: { customerId: { $in: customerIds } } },
@@ -93,7 +87,6 @@ router.get('/customers', async (req, res) => {
   }
 });
 
-// Toggle customer active status
 router.put('/customers/:id/toggle-status', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -112,7 +105,6 @@ router.put('/customers/:id/toggle-status', async (req, res) => {
   }
 });
 
-// Get all services (including unavailable)
 router.get('/services', async (req, res) => {
   try {
     const services = await Service.find().sort({ createdAt: -1 });
@@ -122,7 +114,6 @@ router.get('/services', async (req, res) => {
   }
 });
 
-// Analytics: booking trends (last 7 days)
 router.get('/analytics/trends', async (req, res) => {
   try {
     const days = 7;
@@ -141,7 +132,6 @@ router.get('/analytics/trends', async (req, res) => {
       { $sort: { _id: 1 } },
     ]);
 
-    // Fill missing days
     const result = [];
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date();
@@ -162,7 +152,6 @@ router.get('/analytics/trends', async (req, res) => {
   }
 });
 
-// Analytics: top services
 router.get('/analytics/top-services', async (req, res) => {
   try {
     const top = await Booking.aggregate([
@@ -192,7 +181,6 @@ router.get('/analytics/top-services', async (req, res) => {
   }
 });
 
-// Analytics: revenue by category
 router.get('/analytics/revenue-by-category', async (req, res) => {
   try {
     const data = await Booking.aggregate([
@@ -220,7 +208,6 @@ router.get('/analytics/revenue-by-category', async (req, res) => {
   }
 });
 
-// Activity log: recent status changes
 router.get('/activity', async (req, res) => {
   try {
     const bookings = await Booking.find({ 'statusHistory.0': { $exists: true } })
@@ -251,7 +238,6 @@ router.get('/activity', async (req, res) => {
   }
 });
 
-// Get all reviews (admin)
 router.get('/reviews', async (req, res) => {
   try {
     const reviews = await Review.find()
@@ -266,7 +252,47 @@ router.get('/reviews', async (req, res) => {
   }
 });
 
-// Delete a review (admin)
+router.put('/reviews/:id/approve', async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) {
+      return res.status(404).json({ success: false, message: 'Review not found' });
+    }
+    review.isApproved = true;
+    if (req.body.adminReply) review.adminReply = req.body.adminReply;
+    await review.save();
+
+    const populated = await Review.findById(review._id)
+      .populate('customerId', 'name email')
+      .populate('serviceId', 'name')
+      .populate('bookingId', 'bookingDate');
+
+    res.status(200).json({ success: true, data: populated });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.put('/reviews/:id/reject', async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) {
+      return res.status(404).json({ success: false, message: 'Review not found' });
+    }
+    review.isApproved = false;
+    await review.save();
+
+    const populated = await Review.findById(review._id)
+      .populate('customerId', 'name email')
+      .populate('serviceId', 'name')
+      .populate('bookingId', 'bookingDate');
+
+    res.status(200).json({ success: true, data: populated });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 router.delete('/reviews/:id', async (req, res) => {
   try {
     const review = await Review.findById(req.params.id);
@@ -280,10 +306,11 @@ router.delete('/reviews/:id', async (req, res) => {
   }
 });
 
-// Get review stats (admin)
 router.get('/reviews/stats', async (req, res) => {
   try {
     const totalReviews = await Review.countDocuments();
+    const pendingApproval = await Review.countDocuments({ isApproved: false });
+    const approvedReviews = await Review.countDocuments({ isApproved: true });
     const avgRating = await Review.aggregate([
       { $group: { _id: null, avg: { $avg: '$rating' } } },
     ]);
@@ -296,6 +323,8 @@ router.get('/reviews/stats', async (req, res) => {
       success: true,
       data: {
         totalReviews,
+        pendingApproval,
+        approvedReviews,
         averageRating: avgRating.length > 0 ? Math.round(avgRating[0].avg * 10) / 10 : 0,
         ratingDistribution,
       },

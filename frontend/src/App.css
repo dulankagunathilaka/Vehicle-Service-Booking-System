@@ -1,6 +1,3 @@
-/* App Styles */
-
-/* Floating animation for hero badges */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
@@ -24,7 +21,6 @@
   animation: fade-in 0.8s ease-out both;
 }
 
-/* Typing cursor blink */
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }

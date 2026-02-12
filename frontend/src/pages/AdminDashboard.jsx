@@ -160,7 +160,7 @@ function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
+
       <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
         <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
           <button
@@ -183,7 +183,7 @@ function AdminDashboard() {
       </header>
 
       <main className="flex-1 container mx-auto max-w-7xl px-4 py-8">
-        {/* Page Header */}
+
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-1">
             Booking Management
@@ -193,7 +193,6 @@ function AdminDashboard() {
           </p>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
           {stats.map(({ label, value, Icon, accent, bg, border }) => (
             <div
@@ -215,7 +214,6 @@ function AdminDashboard() {
           ))}
         </div>
 
-        {/* Filters */}
         <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
           <Filter className="w-4 h-4 text-gray-400 flex-shrink-0" />
           {filterOptions.map(({ value, label }) => (
@@ -233,7 +231,6 @@ function AdminDashboard() {
           ))}
         </div>
 
-        {/* Bookings Table */}
         {loading ? (
           <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
             <svg

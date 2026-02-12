@@ -195,7 +195,7 @@ export default function AdminServices() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-gray-900">
@@ -214,7 +214,6 @@ export default function AdminServices() {
         </button>
       </div>
 
-      {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white rounded-xl border border-gray-100 p-4 hover:shadow-md transition">
           <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center mb-2">
@@ -247,7 +246,6 @@ export default function AdminServices() {
         </div>
       </div>
 
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
@@ -259,7 +257,6 @@ export default function AdminServices() {
         />
       </div>
 
-      {/* Category Filters */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         <Wrench className="w-4 h-4 text-gray-400 flex-shrink-0" />
         {["all", ...categories].map((cat) => (
@@ -277,7 +274,6 @@ export default function AdminServices() {
         ))}
       </div>
 
-      {/* Services Grid */}
       {loading ? (
         <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
           <Loader className="w-8 h-8 text-blue-600 mx-auto mb-3 animate-spin" />
@@ -355,7 +351,6 @@ export default function AdminServices() {
         </div>
       )}
 
-      {/* Modal */}
       {showModal && (
         <div
           className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"

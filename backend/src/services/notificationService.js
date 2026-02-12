@@ -26,10 +26,8 @@ const sendNotification = async ({ recipientId, type, category, subject, message,
       },
     });
 
-    // Simulate email sending
     if (type === 'email' || type === 'both') {
       try {
-        // In production: await sendEmail(user.email, subject, message);
         console.log(`[EMAIL] To: ${user.email} | Subject: ${subject}`);
         notification.channel.email.sent = true;
         notification.channel.email.sentAt = new Date();
@@ -39,10 +37,8 @@ const sendNotification = async ({ recipientId, type, category, subject, message,
       }
     }
 
-    // Simulate SMS sending
     if (type === 'sms' || type === 'both') {
       try {
-        // In production: await sendSMS(user.phone, message);
         console.log(`[SMS] To: ${user.phone} | Message: ${message.substring(0, 100)}`);
         notification.channel.sms.sent = true;
         notification.channel.sms.sentAt = new Date();
@@ -60,7 +56,6 @@ const sendNotification = async ({ recipientId, type, category, subject, message,
   }
 };
 
-// Pre-built notification templates
 const templates = {
   bookingConfirmation: (booking, serviceName) => ({
     category: 'booking-confirmation',

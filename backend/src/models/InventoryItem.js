@@ -75,7 +75,6 @@ const inventoryItemSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Auto-generate SKU
 inventoryItemSchema.pre('save', async function (next) {
   if (!this.sku) {
     const prefix = this.category.substring(0, 3).toUpperCase();

@@ -6,7 +6,6 @@ const { sendNotification, templates } = require('../services/notificationService
 
 const router = express.Router();
 
-// Generate invoice from a booking (admin)
 router.post('/generate', protect, authorize('admin'), async (req, res) => {
   try {
     const { bookingId, items, discount, taxRate, notes, dueDate } = req.body;
@@ -16,13 +15,11 @@ router.post('/generate', protect, authorize('admin'), async (req, res) => {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    // Check if invoice already exists
     const existing = await Invoice.findOne({ bookingId });
     if (existing) {
       return res.status(400).json({ success: false, message: 'Invoice already exists for this booking' });
     }
 
-    // Build items list
     const invoiceItems = items && items.length > 0 ? items : [
       {
         description: booking.serviceId.name,
@@ -62,7 +59,6 @@ router.post('/generate', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// Get all invoices (admin)
 router.get('/', protect, authorize('admin'), async (req, res) => {
   try {
     const invoices = await Invoice.find()
@@ -76,7 +72,6 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// Billing stats (admin) — must be before /:id to avoid route conflict
 router.get('/stats/summary', protect, authorize('admin'), async (req, res) => {
   try {
     const totalInvoices = await Invoice.countDocuments();
@@ -105,7 +100,6 @@ router.get('/stats/summary', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// Get my invoices (customer)
 router.get('/my-invoices', protect, authorize('customer'), async (req, res) => {
   try {
     const invoices = await Invoice.find({ customerId: req.user.id })
@@ -122,7 +116,6 @@ router.get('/my-invoices', protect, authorize('customer'), async (req, res) => {
   }
 });
 
-// Get single invoice
 router.get('/:id', protect, async (req, res) => {
   try {
     const invoice = await Invoice.findById(req.params.id)
@@ -142,7 +135,6 @@ router.get('/:id', protect, async (req, res) => {
   }
 });
 
-// Update invoice status (admin)
 router.put('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const { status, paymentMethod, notes } = req.body;
@@ -159,7 +151,6 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
       invoice.paidAt = new Date();
     }
 
-    // Send notification on status change
     if (status === 'sent') {
       const tmpl = templates.invoiceSent(invoice);
       await sendNotification({
@@ -192,7 +183,6 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// Pay invoice (customer)
 router.put('/:id/pay', protect, authorize('customer'), async (req, res) => {
   try {
     const { paymentMethod } = req.body;
@@ -219,7 +209,6 @@ router.put('/:id/pay', protect, authorize('customer'), async (req, res) => {
     invoice.paidAt = new Date();
     await invoice.save();
 
-    // Send payment confirmation notification
     const tmpl = templates.paymentReceived(invoice);
     await sendNotification({
       recipientId: invoice.customerId,
@@ -242,7 +231,6 @@ router.put('/:id/pay', protect, authorize('customer'), async (req, res) => {
   }
 });
 
-// Delete invoice (admin)
 router.delete('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const invoice = await Invoice.findById(req.params.id);
