@@ -298,4 +298,4 @@ backend/
 
 ## Version
 
-1.0.0 - February 9, 2026
+1.0.0 - February 28, 2026
