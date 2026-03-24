@@ -490,7 +490,7 @@ function HomePage() {
   const [testimonials, setTestimonials] = useState(fallbackTestimonials);
 
   useEffect(() => {
-    const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    const API = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
     fetch(`${API}/reviews`)
       .then((res) => res.json())
       .then((data) => {

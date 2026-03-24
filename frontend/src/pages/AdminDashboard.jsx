@@ -35,7 +35,8 @@ function AdminDashboard() {
 
   const fetchBookings = async (token) => {
     try {
-      const response = await fetch("http://localhost:5000/api/bookings", {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+      const response = await fetch(`${apiUrl}/bookings`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -56,8 +57,9 @@ function AdminDashboard() {
     setUpdatingId(bookingId);
 
     try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
       const response = await fetch(
-        `http://localhost:5000/api/bookings/${bookingId}`,
+        `${apiUrl}/bookings/${bookingId}`,
         {
           method: "PUT",
           headers: {

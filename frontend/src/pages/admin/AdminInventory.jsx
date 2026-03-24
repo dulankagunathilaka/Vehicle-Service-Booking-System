@@ -21,7 +21,7 @@ import {
   Tag,
 } from "lucide-react";
 
-const API = "http://localhost:5000/api";
+const API = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
 const categoryConfig = {
   parts: { label: "Parts", color: "bg-blue-50 text-blue-600" },

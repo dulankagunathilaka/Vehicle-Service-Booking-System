@@ -20,7 +20,7 @@ import {
   BarChart3,
 } from "lucide-react";
 
-const API = "http://localhost:5000/api";
+const API = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
 const categoryColors = {
   "booking-confirmation": "bg-emerald-50 text-emerald-600",

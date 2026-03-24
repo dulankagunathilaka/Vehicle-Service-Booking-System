@@ -30,7 +30,8 @@ export default function AdminCustomers() {
   const fetchCustomers = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5000/api/admin/customers", {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+      const res = await fetch(`${apiUrl}/admin/customers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -46,7 +47,7 @@ export default function AdminCustomers() {
     const token = localStorage.getItem("token");
     try {
       const res = await fetch(
-        `http://localhost:5000/api/admin/customers/${id}/toggle-status`,
+        `http://localhost:5001/api/admin/customers/${id}/toggle-status`,
         {
           method: "PUT",
           headers: { Authorization: `Bearer ${token}` },

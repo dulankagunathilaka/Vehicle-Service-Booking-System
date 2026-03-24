@@ -44,7 +44,8 @@ export default function AdminServices() {
   const fetchServices = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5000/api/admin/services", {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+    const res = await fetch(`${apiUrl}/services`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -93,8 +94,8 @@ export default function AdminServices() {
     setSaving(true);
     try {
       const url = editingId
-        ? `http://localhost:5000/api/services/${editingId}`
-        : "http://localhost:5000/api/services";
+        ? `${API}/services/${editingId}`
+        : `${API}/services`;
       const method = editingId ? "PUT" : "POST";
       const res = await fetch(url, {
         method,
@@ -131,7 +132,7 @@ export default function AdminServices() {
       return;
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`http://localhost:5000/api/services/${id}`, {
+      const res = await fetch(`${API}/services/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -146,7 +147,7 @@ export default function AdminServices() {
     const token = localStorage.getItem("token");
     try {
       const res = await fetch(
-        `http://localhost:5000/api/services/${service._id}`,
+        `${API}/services/${service._id}`,
         {
           method: "PUT",
           headers: {

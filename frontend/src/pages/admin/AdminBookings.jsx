@@ -22,7 +22,7 @@ import {
   Activity,
 } from "lucide-react";
 
-const API = "http://localhost:5000/api";
+const API = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
 const priorityConfig = {
   low: { label: "Low", color: "bg-gray-100 text-gray-600 border-gray-200" },

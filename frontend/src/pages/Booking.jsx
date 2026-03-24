@@ -437,7 +437,8 @@ function BookingPage() {
 
   const fetchServices = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/services");
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+      const response = await fetch(`${apiUrl}/services`);
       const data = await response.json();
       if (data.success) setServices(data.data);
     } catch (error) {
@@ -534,8 +535,9 @@ function BookingPage() {
     }
     setLoading(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
       const sel = services.find((s) => s._id === formData.serviceId);
-      const response = await fetch("http://localhost:5000/api/bookings", {
+      const response = await fetch(`${apiUrl}/bookings`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

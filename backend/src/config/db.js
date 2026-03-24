@@ -12,7 +12,7 @@ const connectDB = async () => {
   } catch (error) {
     console.error('✗ MongoDB connection error:', error.message);
     console.log('Note: Make sure MongoDB Atlas URI is correct or MongoDB is running locally');
-    process.exit(1);
+    console.log('Continuing without database connection for development purposes...');
   }
 };
 
